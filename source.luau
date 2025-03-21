@@ -2,8 +2,6 @@
 --!nolint UnknownGlobal
 --!nolint LocalShadow
 
-print('[IY]: ✅ Starting Infinite Yield...')
-
 if type(cloneref) ~= 'function' then
 	cloneref = function(object)
 		return object
@@ -20,7 +18,7 @@ if type(env.IY_LOADED) and type(env.IY_NOTIFY) == 'function' then
 	return
 end
 
-if studio == true then
+if studio == true and typeof(script) == 'Instance' then
 	COREGUI = script:FindFirstAncestorWhichIsA('PlayerGui')
 else
 	COREGUI = cloneref(game:GetService('CoreGui'))
@@ -1926,8 +1924,9 @@ ViewportTextBox.convert(Cmdbar).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_2).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_3).View.ZIndex = 10
 
-IYMouse = Players.LocalPlayer:GetMouse()
-PlayerGui = Players.LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+LocalPlayer = Players.LocalPlayer
+IYMouse = LocalPlayer:GetMouse()
+PlayerGui = LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
 UserInputService = cloneref(game:GetService("UserInputService"))
 TweenService = cloneref(game:GetService("TweenService"))
 HttpService = cloneref(game:GetService("HttpService"))
@@ -2181,9 +2180,9 @@ eventEditor = (function()
 					local condType = set.Type
 					if condType == "Player" then
 						if cmdSet == 0 then
-							metCondition = metCondition and (tostring(Players.LocalPlayer) == argVal)
+							metCondition = metCondition and (tostring(LocalPlayer) == argVal)
 						elseif cmdSet ~= 1 then
-							metCondition = metCondition and table.find(getPlayer(cmdSet,Players.LocalPlayer),argVal)
+							metCondition = metCondition and table.find(getPlayer(cmdSet,LocalPlayer),argVal)
 						end
 					elseif condType == "String" then
 						if cmdSet ~= 0 then
@@ -4817,8 +4816,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Up.BackgroundTransparency = 0.5
 						elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-							local releaseEvent,runEvent
-
+							local releaseEvent
 							local startTime = tick()
 							local pressing = true
 							local startNum = tonumber(frame.Text)
@@ -4853,8 +4851,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Down.BackgroundTransparency = 0.5
 						elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-							local releaseEvent,runEvent
-
+							local releaseEvent
 							local startTime = tick()
 							local pressing = true
 							local startNum = tonumber(frame.Text)
@@ -4936,7 +4933,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				hueInput.FocusLost:Connect(function() updateHue(hueInput.Text) end) hookButtons(hueInput,updateHue)
+				hueInput.FocusLost:Connect(function() 
+					updateHue(hueInput.Text) 
+				end) 
+				hookButtons(hueInput,updateHue)
 
 				local function updateSat(str)
 					local num = tonumber(str)
@@ -4948,7 +4948,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				satInput.FocusLost:Connect(function() updateSat(satInput.Text) end) hookButtons(satInput,updateSat)
+				satInput.FocusLost:Connect(function() 
+					updateSat(satInput.Text) 
+				end) 
+				hookButtons(satInput,updateSat)
 
 				local function updateVal(str)
 					local num = tonumber(str)
@@ -4960,7 +4963,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				valInput.FocusLost:Connect(function() updateVal(valInput.Text) end) hookButtons(valInput,updateVal)
+				valInput.FocusLost:Connect(function() 
+					updateVal(valInput.Text) 
+				end) 
+				hookButtons(valInput,updateVal)
 
 				local function updateRed(str)
 					local num = tonumber(str)
@@ -4972,7 +4978,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(2)
 					end
 				end
-				redInput.FocusLost:Connect(function() updateRed(redInput.Text) end) hookButtons(redInput,updateRed)
+				redInput.FocusLost:Connect(function() 
+					updateRed(redInput.Text) 
+				end)
+				hookButtons(redInput,updateRed)
 
 				local function updateGreen(str)
 					local num = tonumber(str)
@@ -4984,7 +4993,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(2)
 					end
 				end
-				greenInput.FocusLost:Connect(function() updateGreen(greenInput.Text) end) hookButtons(greenInput,updateGreen)
+				greenInput.FocusLost:Connect(function() 
+					updateGreen(greenInput.Text) 
+				end) 
+				hookButtons(greenInput,updateGreen)
 
 				local function updateBlue(str)
 					local num = tonumber(str)
@@ -4996,7 +5008,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(2)
 					end
 				end
-				blueInput.FocusLost:Connect(function() updateBlue(blueInput.Text) end) hookButtons(blueInput,updateBlue)
+				blueInput.FocusLost:Connect(function() 
+					updateBlue(blueInput.Text) 
+				end) 
+				hookButtons(blueInput,updateBlue)
 
 				local colorChoice = Instance.new("TextButton")
 				colorChoice.Name = "Choice"
@@ -5023,7 +5038,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 					newColor.Parent = basicColors
 					column = column + 1
-					if column == 6 then row = row + 1 column = 0 end
+					if column == 6 then
+						row = row + 1
+						column = 0
+					end
 				end
 
 				row = 0
@@ -5048,7 +5066,10 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 					newColor.Parent = customColors
 					column = column + 1
-					if column == 6 then row = row + 1 column = 0 end
+					if column == 6 then 
+						row = row + 1 
+						column = 0 
+					end
 				end
 
 				shade1Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,shade1) end end)
@@ -5303,7 +5324,7 @@ Players.PlayerRemoving:Connect(function(player)
 		end
 	end
 	if viewing ~= nil and player == viewing then
-		workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character
+		workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
 		viewing = nil
 		if viewDied then
 			viewDied:Disconnect()
@@ -5484,34 +5505,42 @@ PrefixBox:GetPropertyChangedSignal("Text"):Connect(function()
 	updatesaves()
 end)
 
-function CamViewport()
-	if workspace.CurrentCamera then
-		return workspace.CurrentCamera.ViewportSize.X
-	end
-end
-
-function CamViewportSize()
-	return workspace.CurrentCamera.ViewportSize
-end
-
 function UpdateToViewport()
 	if Holder.Position.X.Offset < -CamViewport() then
 		Holder:TweenPosition(UDim2.new(1, -CamViewport(), Holder.Position.Y.Scale, Holder.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
 		Notification:TweenPosition(UDim2.new(1, -CamViewport() + 250, Notification.Position.Y.Scale, Notification.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
 	end
 end
-CameraChanged = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateToViewport)
+
+local camera_changed, camera_moved
 
 function updateCamera(child, parent)
 	if parent ~= workspace then
-		CamMoved:Disconnect()
-		CameraChanged:Disconnect()
-		repeat wait() until workspace.CurrentCamera
-		CameraChanged = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateToViewport)
-		CamMoved = workspace.CurrentCamera.AncestryChanged:Connect(updateCamera)
+		if camera_moved and typeof(camera_moved) == 'RBXScriptConnection' then
+			camera_moved:Disconnect()
+		end
+		if camera_changed and typeof(camera_changed) == 'RBXScriptConnection' then
+			camera_changed:Disconnect()
+		end
+		local startTime = tick()
+		while not workspace.CurrentCamera do
+			if tick() - startTime > 5 then break end
+			task.wait()
+		end
+		bindToCamera()
 	end
 end
-CamMoved = workspace.CurrentCamera.AncestryChanged:Connect(updateCamera)
+
+local function bindToCamera()
+	local camera = workspace.CurrentCamera
+	if camera then
+		camera_changed = camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateToViewport)
+		camera_moved = camera.AncestryChanged:Connect(updateCamera)
+	end
+end
+
+bindToCamera()
+workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(bindToCamera)
 
 function dragMain(dragpoint,gui)
 	task.spawn(function()
@@ -5872,10 +5901,10 @@ local lastDeath
 
 function onDied()
 	task.spawn(function()
-		if pcall(function() Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid') end) and Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-			Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
-				if getRoot(Players.LocalPlayer.Character) then
-					lastDeath = getRoot(Players.LocalPlayer.Character).CFrame
+		if pcall(function() LocalPlayer.Character:FindFirstChildOfClass('Humanoid') end) and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+			LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+				if getRoot(LocalPlayer.Character) then
+					lastDeath = getRoot(LocalPlayer.Character).CFrame
 				end
 			end)
 		else
@@ -5887,7 +5916,7 @@ end
 
 Clip = true
 spDelay = 0.1
-Players.LocalPlayer.CharacterAdded:Connect(function()
+LocalPlayer.CharacterAdded:Connect(function()
 	NOFLY()
 	Floating = false
 
@@ -5895,12 +5924,12 @@ Players.LocalPlayer.CharacterAdded:Connect(function()
 		execCmd('clip')
 	end
 
-	repeat wait() until getRoot(Players.LocalPlayer.Character)
+	repeat wait() until getRoot(LocalPlayer.Character)
 
 	pcall(function()
 		if spawnpoint and not refreshCmd and spawnpos ~= nil then
 			wait(spDelay)
-			getRoot(Players.LocalPlayer.Character).CFrame = spawnpos
+			getRoot(LocalPlayer.Character).CFrame = spawnpos
 		end
 	end)
 
@@ -6001,9 +6030,9 @@ function execCmd(cmdStr,speaker,store)
 			if cmd then
 				table.remove(args,1)
 				cargs = args
-				if not speaker then speaker = Players.LocalPlayer end
+				if not speaker then speaker = LocalPlayer end
 				if store then
-					if speaker == Players.LocalPlayer then
+					if speaker == LocalPlayer then
 						if cmdHistory[1] ~= rawCmdStr and rawCmdStr:sub(1,11) ~= 'lastcommand' and rawCmdStr:sub(1,7) ~= 'lastcmd' then
 							table.insert(cmdHistory,1,rawCmdStr)
 						end
@@ -6110,7 +6139,7 @@ local GetClosestPlayerFromCursor = function()
 	local found = nil
 	local ClosestDistance = math.huge
 	for i, v in pairs(Players:GetPlayers()) do
-		if v ~= Players.LocalPlayer and v.Character and v.Character:FindFirstChildOfClass("Humanoid") then
+		if v ~= LocalPlayer and v.Character and v.Character:FindFirstChildOfClass("Humanoid") then
 			for k, x in pairs(v.Character:GetChildren()) do
 				if string.find(x.Name, "Torso") then
 					local Distance = (WorldToScreen(x) - MousePositionToVector2()).Magnitude
@@ -6151,7 +6180,7 @@ SpecialPlayerCases = {
 	end,
 	["random"] = function(speaker,args,currentList)
 		local players = Players:GetPlayers()
-		local localplayer = Players.LocalPlayer
+		local localplayer = LocalPlayer
 		table.remove(players, table.find(players, localplayer))
 		return {players[math.random(1,#players)]}
 	end,
@@ -6539,12 +6568,12 @@ UserInputService.InputBegan:Connect(function(input,gameProcessed)
 	end
 end)
 
-Players.LocalPlayer.Chatted:Connect(function()
+LocalPlayer.Chatted:Connect(function()
 	wait()
 	if lastEnteredString then
 		local message = lastEnteredString
 		lastEnteredString = nil
-		do_exec(message, Players.LocalPlayer)
+		do_exec(message, LocalPlayer)
 	end
 end)
 
@@ -6560,7 +6589,7 @@ tabAllowed = true
 Cmdbar.FocusLost:Connect(function(enterpressed)
 	if enterpressed then
 		local cmdbarText = Cmdbar.Text:gsub("^"..prefix,"")
-		execCmd(cmdbarText,Players.LocalPlayer,true)
+		execCmd(cmdbarText,LocalPlayer,true)
 	end
 	if tabComplete then tabComplete:Disconnect() end
 	wait()
@@ -6611,7 +6640,7 @@ function ESP(plr)
 			end
 		end
 		wait()
-		if plr.Character and plr.Name ~= Players.LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_ESP') then
+		if plr.Character and plr.Name ~= LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_ESP') then
 			local ESPholder = Instance.new("Folder")
 			ESPholder.Name = plr.Name..'_ESP'
 			ESPholder.Parent = COREGUI
@@ -6679,8 +6708,8 @@ function ESP(plr)
 				end)
 				local function espLoop()
 					if COREGUI:FindFirstChild(plr.Name..'_ESP') then
-						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and Players.LocalPlayer.Character and getRoot(Players.LocalPlayer.Character) and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-							local pos = math.floor((getRoot(Players.LocalPlayer.Character).Position - getRoot(plr.Character).Position).magnitude)
+						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+							local pos = math.floor((getRoot(LocalPlayer.Character).Position - getRoot(plr.Character).Position).magnitude)
 							TextLabel.Text = 'Name: '..plr.Name..' | Health: '..round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1)..' | Studs: '..pos
 						end
 					else
@@ -6703,7 +6732,7 @@ function CHMS(plr)
 			end
 		end
 		wait()
-		if plr.Character and plr.Name ~= Players.LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_CHMS') then
+		if plr.Character and plr.Name ~= LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_CHMS') then
 			local ESPholder = Instance.new("Folder")
 			ESPholder.Name = plr.Name..'_CHMS'
 			ESPholder.Parent = COREGUI
@@ -6764,7 +6793,7 @@ function Locate(plr)
 			end
 		end
 		wait()
-		if plr.Character and plr.Name ~= Players.LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_LC') then
+		if plr.Character and plr.Name ~= LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_LC') then
 			local ESPholder = Instance.new("Folder")
 			ESPholder.Name = plr.Name..'_LC'
 			ESPholder.Parent = COREGUI
@@ -6832,8 +6861,8 @@ function Locate(plr)
 				end)
 				local function lcLoop()
 					if COREGUI:FindFirstChild(plr.Name..'_LC') then
-						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and Players.LocalPlayer.Character and getRoot(Players.LocalPlayer.Character) and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-							local pos = math.floor((getRoot(Players.LocalPlayer.Character).Position - getRoot(plr.Character).Position).magnitude)
+						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+							local pos = math.floor((getRoot(LocalPlayer.Character).Position - getRoot(plr.Character).Position).magnitude)
 							TextLabel.Text = 'Name: '..plr.Name..' | Health: '..round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1)..' | Studs: '..pos
 						end
 					else
@@ -7082,12 +7111,12 @@ function onInputBegan(input,gameProcessed)
 						local isOn = toggleOn[v] == true
 						toggleOn[v] = not isOn
 						if isOn then
-							execCmd(v.TOGGLE,Players.LocalPlayer)
+							execCmd(v.TOGGLE,LocalPlayer)
 						else
-							execCmd(v.COMMAND,Players.LocalPlayer)
+							execCmd(v.COMMAND,LocalPlayer)
 						end
 					else
-						execCmd(v.COMMAND,Players.LocalPlayer)
+						execCmd(v.COMMAND,LocalPlayer)
 					end
 				end
 			end
@@ -7100,7 +7129,7 @@ function onInputEnded(input,gameProcessed)
 		for i,v in pairs(binds) do
 			if v.ISKEYUP then
 				if (input.UserInputType == Enum.UserInputType.Keyboard and v.KEY:lower()==tostring(input.KeyCode):lower()) or (input.UserInputType == Enum.UserInputType.MouseButton1 and v.KEY:lower()=='leftclick') or (input.UserInputType == Enum.UserInputType.MouseButton2 and v.KEY:lower()=='rightclick') then
-					execCmd(v.COMMAND,Players.LocalPlayer)
+					execCmd(v.COMMAND,LocalPlayer)
 				end
 			end
 		end
@@ -7138,7 +7167,7 @@ end)
 
 local function clicktpFunc()
 	pcall(function()
-		local character = Players.LocalPlayer.Character
+		local character = LocalPlayer.Character
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		if humanoid and humanoid.SeatPart then
 			humanoid.Sit = false
@@ -7162,11 +7191,11 @@ IYMouse.Button1Down:Connect(function()
 	for i,v in pairs(binds) do
 		if v.COMMAND == 'clicktp' then
 			local input = v.KEY
-			if input == 'RightClick' and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Players.LocalPlayer.Character then
+			if input == 'RightClick' and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and LocalPlayer.Character then
 				clicktpFunc()
-			elseif input == 'LeftClick' and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and Players.LocalPlayer.Character then
+			elseif input == 'LeftClick' and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and LocalPlayer.Character then
 				clicktpFunc()
-			elseif UserInputService:IsKeyDown(Enum.KeyCode[input:sub(14)]) and Players.LocalPlayer.Character then
+			elseif UserInputService:IsKeyDown(Enum.KeyCode[input:sub(14)]) and LocalPlayer.Character then
 				clicktpFunc()
 			end
 		elseif v.COMMAND == 'clickdel' then
@@ -7857,11 +7886,11 @@ commands:new('rejoin', {
 	description = 'Rejoins the current game or place.',
 	callback = function(args, speaker)
 		if #Players:GetPlayers() <= 1 then
-			Players.LocalPlayer:Kick("\nRejoining...")
+			LocalPlayer:Kick("\nRejoining...")
 			wait()
-			TeleportService:Teleport(PlaceId, Players.LocalPlayer)
+			TeleportService:Teleport(PlaceId, LocalPlayer)
 		else
-			TeleportService:TeleportToPlaceInstance(PlaceId, JobId, Players.LocalPlayer)
+			TeleportService:TeleportToPlaceInstance(PlaceId, JobId, LocalPlayer)
 		end
 	end
 })
@@ -7899,7 +7928,7 @@ commands:new('serverhop', {
 			end
 
 			if #servers > 0 then
-				TeleportService:TeleportToPlaceInstance(PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
+				TeleportService:TeleportToPlaceInstance(PlaceId, servers[math.random(1, #servers)], LocalPlayer)
 			else
 				return notify("Serverhop", "Couldn't find a server.")
 			end
@@ -7975,11 +8004,11 @@ QEfly = true
 iyflyspeed = 1
 vehicleflyspeed = 1
 function sFLY(vfly)
-	repeat wait() until Players.LocalPlayer and Players.LocalPlayer.Character and getRoot(Players.LocalPlayer.Character) and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+	repeat wait() until LocalPlayer and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 	repeat wait() until IYMouse
 	if flyKeyDown or flyKeyUp then flyKeyDown:Disconnect() flyKeyUp:Disconnect() end
 
-	local T = getRoot(Players.LocalPlayer.Character)
+	local T = getRoot(LocalPlayer.Character)
 	local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local SPEED = 0
@@ -7997,8 +8026,8 @@ function sFLY(vfly)
 		BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
 		task.spawn(function()
 			repeat wait()
-				if not vfly and Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-					Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = true
+				if not vfly and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+					LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = true
 				end
 				if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
 					SPEED = 50
@@ -8020,8 +8049,8 @@ function sFLY(vfly)
 			SPEED = 0
 			BG:Destroy()
 			BV:Destroy()
-			if Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-				Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+			if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+				LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
 			end
 		end)
 	end
@@ -8061,9 +8090,14 @@ end
 
 function NOFLY()
 	FLYING = false
-	if flyKeyDown or flyKeyUp then flyKeyDown:Disconnect() flyKeyUp:Disconnect() end
-	if Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-		Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+	if typeof(flyKeyDown) == 'RBXScriptConnection' and flyKeyDown.Connected then
+		flyKeyDown:Disconnect()
+	end
+	if typeof(flyKeyUp) == 'RBXScriptConnection' and flyKeyUp.Connected then
+		flyKeyUp:Disconnect()
+	end
+	if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+		LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
 	end
 	pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Custom end)
 end
@@ -8090,7 +8124,6 @@ local mobilefly = function(speaker, vfly)
 	FLYING = true
 
 	local root = getRoot(speaker.Character)
-	local camera = workspace.CurrentCamera
 	local v3none = Vector3.new()
 	local v3zero = Vector3.new(0, 0, 0)
 	local v3inf = Vector3.new(9e9, 9e9, 9e9)
@@ -8126,7 +8159,6 @@ local mobilefly = function(speaker, vfly)
 
 	mfly2 = RunService.RenderStepped:Connect(function()
 		root = getRoot(speaker.Character)
-		camera = workspace.CurrentCamera
 		if speaker.Character:FindFirstChildWhichIsA("Humanoid") and root and root:FindFirstChild(velocityHandlerName) and root:FindFirstChild(gyroHandlerName) then
 			local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
 			local VelocityHandler = root:FindFirstChild(velocityHandlerName)
@@ -8877,7 +8909,7 @@ commands:new('unhideguis', {
 
 function deleteGuisAtPos()
 	pcall(function()
-		local guisAtPosition = Players.LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(IYMouse.X, IYMouse.Y)
+		local guisAtPosition = LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(IYMouse.X, IYMouse.Y)
 		for _, gui in pairs(guisAtPosition) do
 			if gui.Visible == true then
 				gui:Destroy()
@@ -8958,7 +8990,7 @@ commands:new('rec', {
 	description = 'Toggles recording in-game. Does not work in Roblox Studio.',
 	callback = function(args, speaker)
 		if not studio then
-			return COREGUI:ToggleRecording()
+			COREGUI:ToggleRecording()
 		else
 			notify('Roblox Studio Unsupported', 'This command only works in-game')
 		end
@@ -8971,7 +9003,7 @@ commands:new('screenshot', {
 	description = 'Takes a screenshot in-game. Does not work in Roblox Studio.',
 	callback = function(args, speaker)
 		if not studio then
-			return COREGUI:TakeScreenshot()
+			COREGUI:TakeScreenshot()
 		else
 			notify('Roblox Studio Unsupported', 'This command only works in-game')
 		end
@@ -8983,7 +9015,7 @@ commands:new('togglefs', {
 	aliases = { 'togglefullscreen' },
 	description = 'Toggles fullscreen mode for the game.',
 	callback = function(args, speaker)
-		return GuiService:ToggleFullscreen()
+		GuiService:ToggleFullscreen()
 	end
 })
 
@@ -9039,7 +9071,7 @@ commands:new('clientantikick', {
 			return notify('Incompatible Exploit', 'Your exploit does not support this command (missing hookmetamethod)')
 		end
 
-		local LocalPlayer = Players.LocalPlayer
+		local LocalPlayer = LocalPlayer
 		local oldhmmi, oldhmmnc
 
 		-- Hook __index to prevent kick method calls
@@ -9509,7 +9541,8 @@ end)
 
 local INPUT_PRIORITY = Enum.ContextActionPriority.High.Value
 
-Spring = {} do
+Spring = {}
+do
 	Spring.__index = Spring
 
 	function Spring.new(freq, pos)
@@ -9549,8 +9582,8 @@ local cameraRot = Vector2.new()
 local velSpring = Spring.new(5, Vector3.new())
 local panSpring = Spring.new(5, Vector2.new())
 
-Input = {} do
-
+Input = {}
+do
 	keyboard = {
 		W = 0,
 		A = 0,
@@ -9637,33 +9670,35 @@ Input = {} do
 end
 
 function GetFocusDistance(cameraFrame)
-	local znear = 0.1
-	local viewport = Camera.ViewportSize
-	local projy = 2*math.tan(cameraFov/2)
-	local projx = viewport.x/viewport.y*projy
-	local fx = cameraFrame.rightVector
-	local fy = cameraFrame.upVector
-	local fz = cameraFrame.lookVector
-
-	local minVect = Vector3.new()
-	local minDist = 512
-
-	for x = 0, 1, 0.5 do
-		for y = 0, 1, 0.5 do
-			local cx = (x - 0.5)*projx
-			local cy = (y - 0.5)*projy
-			local offset = fx*cx - fy*cy + fz
-			local origin = cameraFrame.p + offset*znear
-			local _, hit = workspace:FindPartOnRay(Ray.new(origin, offset.unit*minDist))
-			local dist = (hit - origin).magnitude
-			if minDist > dist then
-				minDist = dist
-				minVect = offset.unit
+	if typeof(camera) == 'Instance' and camera:IsA('Camera') then
+		local znear = 0.1
+		local viewport = camera.ViewportSize
+		local projy = 2*math.tan(cameraFov/2)
+		local projx = viewport.x/viewport.y*projy
+		local fx = cameraFrame.rightVector
+		local fy = cameraFrame.upVector
+		local fz = cameraFrame.lookVector
+	
+		local minVect = Vector3.new()
+		local minDist = 512
+	
+		for x = 0, 1, 0.5 do
+			for y = 0, 1, 0.5 do
+				local cx = (x - 0.5)*projx
+				local cy = (y - 0.5)*projy
+				local offset = fx*cx - fy*cy + fz
+				local origin = cameraFrame.p + offset*znear
+				local _, hit = workspace:FindPartOnRay(Ray.new(origin, offset.unit*minDist))
+				local dist = (hit - origin).magnitude
+				if minDist > dist then
+					minDist = dist
+					minVect = offset.unit
+				end
 			end
 		end
+	
+		return fz:Dot(minVect)*minDist
 	end
-
-	return fz:Dot(minVect)*minDist
 end
 
 local function StepFreecam(dt)
@@ -9892,8 +9927,8 @@ commands:new("fov", {
 	end
 })
 
-local preMaxZoom = Players.LocalPlayer.CameraMaxZoomDistance
-local preMinZoom = Players.LocalPlayer.CameraMinZoomDistance
+local preMaxZoom = LocalPlayer.CameraMaxZoomDistance
+local preMinZoom = LocalPlayer.CameraMinZoomDistance
 
 commands:new("lookat", {
 	usage = "lookat [player]",
@@ -10205,7 +10240,7 @@ commands:new('antiafk', {
 	callback = function(args, speaker)
 		local GC = getconnections or get_signal_cons
 		if GC then
-			for i,v in pairs(GC(Players.LocalPlayer.Idled)) do
+			for i,v in pairs(GC(LocalPlayer.Idled)) do
 				if v["Disable"] then
 					v["Disable"](v)
 				elseif v["Disconnect"] then
@@ -10214,7 +10249,7 @@ commands:new('antiafk', {
 			end
 		else
 			local VirtualUser = cloneref(game:GetService("VirtualUser"))
-			Players.LocalPlayer.Idled:Connect(function()
+			LocalPlayer.Idled:Connect(function()
 				VirtualUser:CaptureController()
 				VirtualUser:ClickButton2(Vector2.new())
 			end)
@@ -10764,7 +10799,7 @@ commands:new({
 		walkto = false
 		wait()
 		local players = getPlayer(args[1], speaker)
-		local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		local path = PathService:CreatePath()
 
 		for i, v in pairs(players) do
@@ -10805,7 +10840,7 @@ commands:new({
 		wait()
 
 		local WPName = tostring(getstring(1))
-		local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		local path = PathService:CreatePath()
 
 		if speaker.Character then
@@ -11832,7 +11867,7 @@ commands:new('clickteleport', {
 	aliases = {},
 	description = 'Notifies the user to set up click teleport in keybind settings.',
 	callback = function(args, speaker)
-		if speaker == Players.LocalPlayer then
+		if speaker == LocalPlayer then
 			notify('Click TP', 'Go to Settings > Keybinds > Add to set up click tp')
 		end
 	end
@@ -11879,7 +11914,7 @@ commands:new('clickdelete', {
 	aliases = {},
 	description = 'Notifies the user to set up click delete in keybind settings.',
 	callback = function(args, speaker)
-		if speaker == Players.LocalPlayer then
+		if speaker == LocalPlayer then
 			notify('Click Delete', 'Go to Settings > Keybinds > Add to set up click delete')
 		end
 	end
@@ -12683,7 +12718,7 @@ commands:new('carpet', {
 
 				carpetLoop = RunService.Heartbeat:Connect(function()
 					pcall(function()
-						getRoot(Players.LocalPlayer.Character).CFrame = getRoot(Players[carpetplr].Character).CFrame
+						getRoot(LocalPlayer.Character).CFrame = getRoot(Players[carpetplr].Character).CFrame
 					end)
 				end)
 
@@ -13237,7 +13272,7 @@ commands:new('hatspin', {
 
 			spinhats = RunService.Stepped:Connect(function()
 				pcall(function()
-					keep.Position = Players.LocalPlayer.Character.Head.Position
+					keep.Position = LocalPlayer.Character.Head.Position
 				end)
 			end)
 		end
@@ -13271,7 +13306,7 @@ commands:new('clearhats', {
 	description = 'Clears all hats from the player\'s character.',
 	callback = function(args, speaker)
 		if firetouchinterest then
-			local Player = Players.LocalPlayer
+			local Player = LocalPlayer
 			local Character = Player.Character
 			local Old = Character:FindFirstChild("HumanoidRootPart").CFrame
 			local Hats = {}
@@ -13355,7 +13390,7 @@ commands:new('noroot', {
 	description = 'Removes the HumanoidRootPart and the character from the workspace temporarily.',
 	callback = function(args, speaker)
 		if speaker.Character ~= nil then
-			local char = Players.LocalPlayer.Character
+			local char = LocalPlayer.Character
 			char.Parent = nil
 			char.HumanoidRootPart:Destroy()
 			char.Parent = workspace
@@ -13415,7 +13450,7 @@ commands:new('unequiptools', {
 })
 
 local function GetHandleTools(p)
-	p = p or Players.LocalPlayer
+	p = p or LocalPlayer
 	local r = {}
 	for _, v in ipairs(p.Character and p.Character:GetChildren() or {}) do
 		if v.IsA(v, "BackpackItem") and v.FindFirstChild(v, "Handle") then
@@ -13793,13 +13828,13 @@ commands:new('droptools', {
 	aliases = { 'droptool' },
 	description = 'Drops all tools from the player\'s backpack and character.',
 	callback = function(args, speaker)
-		for _, v in pairs(Players.LocalPlayer.Backpack:GetChildren()) do
+		for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do
 			if v:IsA("Tool") then
-				v.Parent = Players.LocalPlayer.Character
+				v.Parent = LocalPlayer.Character
 			end
 		end
 		wait()
-		for _, v in pairs(Players.LocalPlayer.Character:GetChildren()) do
+		for _, v in pairs(LocalPlayer.Character:GetChildren()) do
 			if v:IsA("Tool") then
 				v.Parent = workspace
 			end
@@ -14470,7 +14505,7 @@ commands:new('hovername', {
 			if t then
 				local x = IYMouse.X
 				local y = IYMouse.Y
-				local xP, yP
+				local xP
 				if IYMouse.X > 200 then
 					xP = x - 205
 					nameBox.TextXAlignment = Enum.TextXAlignment.Right
@@ -14490,7 +14525,7 @@ commands:new('hovername', {
 			end
 		end
 
-		local nbUpdateFunc = IYMouse.Move:Connect(updateNameBox)
+		nbUpdateFunc = IYMouse.Move:Connect(updateNameBox)
 	end
 })
 
@@ -14499,7 +14534,7 @@ commands:new('unhovername', {
 	aliases = { 'nohovername' },
 	description = 'Turns off hovername.',
 	callback = function(args, speaker)
-		if nbUpdateFunc then
+		if typeof(nbUpdateFunc) == 'RBXScriptConnection' and nbUpdateFunc.Connected then
 			nbUpdateFunc:Disconnect()
 			nameBox:Destroy()
 			nbSelection:Destroy()
@@ -14512,14 +14547,15 @@ commands:new('headsize', {
 	aliases = {},
 	description = 'Expands the head size for the player\'s head (default is 1).',
 	callback = function(args, speaker)
-		local players = getPlayer(args[1], speaker)
+		local players = getPlayers(args[1], speaker)
 		for _, v in pairs(players) do
-			if Players[v] ~= speaker and Players[v].Character:FindFirstChild('Head') then
-				local sizeArg = tonumber(args[2]) or 1
-				local Size = Vector3.new(sizeArg, sizeArg, sizeArg)
-				local Head = Players[v].Character:FindFirstChild('Head')
-				if Head:IsA("BasePart") then
-					Head.Size = (sizeArg == 1) and Vector3.new(2, 1, 1) or Size
+			if v ~= speaker then
+				local char = v.Character
+				local head = char and char:FindFirstChild('Head')
+				if head and head:IsA('BasePart') then
+					local sizeArg = tonumber(args[2]) or 1
+					local Size = Vector3.new(sizeArg, sizeArg, sizeArg)
+					head.Size = (sizeArg == 1) and Vector3.new(2, 1, 1) or Size
 				end
 			end
 		end
@@ -14531,20 +14567,22 @@ commands:new('hitbox', {
 	aliases = {},
 	description = 'Expands the hitbox for the player\'s HumanoidRootPart (default is 1)',
 	callback = function(args, speaker)
-		local players = getPlayer(args[1], speaker)
-		local transparency = args[3] and tonumber(args[3]) or 0.4
-		for i, v in pairs(players) do
-			if Players[v] ~= speaker and Players[v].Character:FindFirstChild('HumanoidRootPart') then
-				local sizeArg = tonumber(args[2])
-				local Size = Vector3.new(sizeArg, sizeArg, sizeArg)
-				local Root = Players[v].Character:FindFirstChild('HumanoidRootPart')
-				if Root:IsA("BasePart") then
+		for _, player in pairs(getPlayers(args[1], speaker)) do
+			if player ~= speaker then
+				local char = speaker.Character
+				local hum = char and char:FindFirstChildWhichIsA('Humanoid')
+				local root = hum and hum.RootPart or (char and char:FindFirstChild('HumanoidRootPart'))
+
+				if root and root:IsA('BasePart') then
+					local transparency = args[3] and tonumber(args[3]) or 0.4
 					if not args[2] or sizeArg == 1 then
-						Root.Size = Vector3.new(2, 1, 1)
-						Root.Transparency = transparency
+						root.Size = Vector3.new(2, 1, 1)
+						root.Transparency = transparency
 					else
-						Root.Size = Size
-						Root.Transparency = transparency
+						local sizeArg = tonumber(args[2])
+						local size = Vector3.new(sizeArg, sizeArg, sizeArg)
+						root.Size = size
+						root.Transparency = transparency
 					end
 				end
 			end
@@ -14552,30 +14590,32 @@ commands:new('hitbox', {
 	end
 })
 
+local stareAtConnection
+
 commands:new("stareat", {
 	usage = "stareat [player]",
 	aliases = { "stare" },
 	description = "Stare / look at a player.",
 	callback = function(args, speaker)
-		local players = getPlayer(args[1], speaker)
-		for i,v in pairs(players) do
-			if stareLoop then
-				stareLoop:Disconnect()
-			end
-			if not Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Players[v].Character:FindFirstChild("HumanoidRootPart") then return end
-			local function stareFunc()
-				if Players.LocalPlayer.Character.PrimaryPart and Players:FindFirstChild(v) and Players[v].Character ~= nil and Players[v].Character:FindFirstChild("HumanoidRootPart") then
-					local chrPos=Players.LocalPlayer.Character.PrimaryPart.Position
-					local tPos=Players[v].Character:FindFirstChild("HumanoidRootPart").Position
-					local modTPos=Vector3.new(tPos.X, chrPos.Y, tPos.Z)
-					local newCF=CFrame.new(chrPos, modTPos)
-					Players.LocalPlayer.Character:SetPrimaryPartCFrame(newCF)
-				elseif not Players:FindFirstChild(v) then
-					stareLoop:Disconnect()
-				end
-			end
+		if typeof(stareAtConnection) == 'RBXScriptConnection' and stareAtConnection.Connected then
+			stareAtConnection:Disconnect()
+		end
 
-			stareLoop = RunService.RenderStepped:Connect(stareFunc)
+		for _, player in pairs(getPlayers(args[1], speaker)) do
+			if player ~= speaker then
+				stareAtConnection = RunService.Stepped:Connect(function()
+					local char = player.Character
+					local pivotpos = char and char:GetPivot().Position
+					local mychar = speaker.Character
+					local myroot = getRoot(mychar)
+					local rootpos = myroot and myroot.CFrame.Position
+
+					if rootpos and pivotpos then
+						mychar:SetPivot(CFrame.new(rootpos, Vector3.new(pivotpos.X, rootpos.Y, pivotpos.Z)))
+					end
+				end)
+				break
+			end
 		end
 	end
 })
@@ -14585,8 +14625,8 @@ commands:new("unstareat", {
 	aliases = { "unstare", "nostare" },
 	description = "Disables stareat.",
 	callback = function(args, speaker)
-		if stareLoop then
-			stareLoop:Disconnect()
+		if typeof(stareAtConnection) == 'RBXScriptConnection' and stareAtConnection.Connected then
+			stareAtConnection:Disconnect()
 		end
 	end
 })
@@ -14597,7 +14637,7 @@ RolewatchConnection = Players.PlayerAdded:Connect(function(player)
 	if player:IsInGroup(RolewatchData.Group) then
 		if tostring(player:GetRoleInGroup(RolewatchData.Group)):lower() == RolewatchData.Role:lower() then
 			if RolewatchData.Leave == true then
-				Players.LocalPlayer:Kick("\n\nRolewatch\nPlayer \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"\n")
+				LocalPlayer:Kick("\n\nRolewatch\nPlayer \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"\n")
 			else
 				notify("Rolewatch", "Player \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"")
 			end
@@ -15403,8 +15443,8 @@ if not isLegacyChat then
 			if logsEnabled == true then
 				CreateLabel(player.Name, message.Text)
 			end
-			if player.UserId == Players.LocalPlayer.UserId then
-				do_exec(message.Text, Players.LocalPlayer)
+			if player.UserId == LocalPlayer.UserId then
+				do_exec(message.Text, LocalPlayer)
 			end
 			eventEditor.FireEvent("OnChatted", player.Name, message.Text)
 			sendChatWebhook(player, message.Text)
