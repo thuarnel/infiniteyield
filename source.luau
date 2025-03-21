@@ -3276,12 +3276,28 @@ function CreateJoinLabel(plr,ID)
 	ImageLabel_3.Image = Players:GetUserThumbnailAsync(ID, Enum.ThumbnailType.AvatarThumbnail, Enum.ThumbnailSize.Size420x420)
 	scroll_3.CanvasSize = UDim2.new(0, 0, 0, listlayout.AbsoluteContentSize.Y)
 	scroll_3.CanvasPosition = Vector2.new(0,scroll_2.CanvasPosition.Y+infoFrame.AbsoluteSize.Y)
+	
 	wait()
-	local user = game:HttpGet("https://users.roblox.com/v1/users/"..ID)
-	local json = HttpService:JSONDecode(user)
-	local date = json["created"]:sub(1,10)
-	local splitDates = string.split(date,"-")
-	info2.Text = string.gsub(info2.Text, "Loading...",splitDates[2].."/"..splitDates[3].."/"..splitDates[1])
+
+	local success, user = pcall(function()
+		return game:HttpGet("https://users.roblox.com/v1/users/" .. ID)
+	end)
+	
+	if success and user then
+		local successDecode, json = pcall(function()
+			return HttpService:JSONDecode(user)
+		end)
+	
+		if successDecode and json and json["created"] then
+			local date = json["created"]:sub(1, 10)
+			local splitDates = string.split(date, "-")
+			info2.Text = string.gsub(info2.Text, "Loading...", splitDates[2] .. "/" .. splitDates[3] .. "/" .. splitDates[1])
+		else
+			info2.Text = "Error parsing data"
+		end
+	else
+		info2.Text = "Error fetching data"
+	end	
 end
 
 IYMouse.KeyDown:Connect(function(Key)
