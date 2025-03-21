@@ -1,4 +1,5 @@
 --!nocheck
+--!nolint UnknownGlobal
 --!nolint LocalShadow
 
 print('[IY]: ✅ Starting Infinite Yield...')
@@ -2018,13 +2019,6 @@ function getRoot(char)
 	return false
 end
 
-function tools(plr)
-	if plr:FindFirstChildOfClass("Backpack"):FindFirstChildOfClass('Tool') or plr.Character:FindFirstChildOfClass('Tool') then
-		return true
-	end
-	return false
-end
-
 function r15(plr)
 	if plr.Character:FindFirstChildOfClass('Humanoid').RigType == Enum.HumanoidRigType.R15 then
 		return true
@@ -3364,12 +3358,12 @@ end
 
 local colorpickerOpen = false
 ColorsButton.MouseButton1Click:Connect(function()
-	cache_currentShade1 = currentShade1
-	cache_currentShade2 = currentShade2
-	cache_currentShade3 = currentShade3
-	cache_currentText1 = currentText1
-	cache_currentText2 = currentText2
-	cache_currentScroll = currentScroll
+	local cache_currentShade1 = currentShade1
+	local cache_currentShade2 = currentShade2
+	local cache_currentShade3 = currentShade3
+	local cache_currentText1 = currentText1
+	local cache_currentText2 = currentText2
+	local cache_currentScroll = currentScroll
 	if not colorpickerOpen then
 		colorpickerOpen = true
 		picker = game:GetObjects("rbxassetid://4908465318")[1]

@@ -1,4 +1,0 @@
-{
-    "unwantedRecommendations": ["sumneko.lua"],
-    "recommendations": ["JohnnyMorganz.luau-lsp"]
-}
