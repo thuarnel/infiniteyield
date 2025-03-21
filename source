@@ -9718,8 +9718,8 @@ commands:new('tpposition', {
         local function parseCoord(input, base)
             if input == "~" then
                 return base
-            elseif input:match("^%+%-?%d+$") then
-                return base + tonumber(input:sub(2))
+            elseif input:match("^%+%-?%d+$") or input:match("^-?%d+$") then
+                return base + tonumber(input)
             else
                 return tonumber(input)
             end
