@@ -1,4 +1,4 @@
-# Infinite Yield FE (Rework)
+# thuarnel's IY
 
 Created by [@EdgeIY](https://github.com/edgeiy)
 
