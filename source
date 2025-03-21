@@ -2851,7 +2851,7 @@ currentText1 = Color3.new(1, 1, 1)
 currentText2 = Color3.new(0, 0, 0)
 currentScroll = Color3.fromRGB(78,78,79)
 
-defaultGuiScale = 1.25 -- IsOnMobile and 0.9 or 1
+defaultGuiScale = IsOnMobile and 0.9 or 1
 defaultsettings = {
 	prefix = ';';
 	StayOpen = false;
@@ -4423,16 +4423,6 @@ function commands:new(name, info)
 	if type(name) == 'string' and type(info) == 'table' then
 		self.list[name] = info
 	end
-end
-
-local function addcmd(name, aliases, callback, plugin)
-	commands:new(name, {
-		usage = name,
-		description = 'Legacy command, no description available.',
-		callback = callback,
-		aliases = aliases,
-		plugin = plugin
-	})
 end
 
 IndexContents("", true)
@@ -6068,35 +6058,6 @@ commands:new('clraliases', {
 	end
 })
 
-commands:new('discord', {
-	usage = 'discord / support / help',
-	aliases = { 'support', 'help' },
-	description = 'Provides the Discord invite link.',
-	callback = function(args, speaker)
-		if everyClipboard then
-			toClipboard('https://discord.gg/wat')
-			notify('Discord Invite', 'Copied to clipboard!\ndiscord.gg/wat')
-		else
-			notify('Discord Invite', 'discord.gg/wat')
-		end
-		if httprequest then
-			httprequest({
-				Url = 'http://127.0.0.1:6463/rpc?v=1',
-				Method = 'POST',
-				Headers = {
-					['Content-Type'] = 'application/json',
-					Origin = 'https://discord.com'
-				},
-				Body = HttpService:JSONEncode({
-					cmd = 'INVITE_BROWSER',
-					nonce = HttpService:GenerateGUID(false),
-					args = {code = 'wat'}
-				})
-			})
-		end
-	end
-})
-
 commands:new('keepiy', {
 	usage = 'keepiy',
 	description = 'Keeps infinite yield enabled if your exploit supports queue_on_teleport.',
@@ -6143,7 +6104,9 @@ commands:new('serverinfo', {
 	aliases = { 'info', 'sinfo' },
 	description = 'Show server information',
 	callback = function(args, speaker)
-		if not canOpenServerinfo then return end
+		if not canOpenServerinfo then
+			return
+		end
 		canOpenServerinfo = false
 		task.spawn(function()
 			local FRAME = Instance.new("Frame")
@@ -13662,9 +13625,11 @@ commands:new("guiscale", {
 
 			if scale >= 0.4 and scale <= 2 then
 				guiScale = scale
+				notify('Scale Updated', 'The new UI scale is ' .. tostring(guiScale))
 			end
 		else
 			guiScale = defaultGuiScale
+			notify('Scale Updated', 'The new UI scale is ' .. tostring(guiScale))
 		end
 
 		Scale.Scale = math.max(Holder.AbsoluteSize.X / 1920, guiScale)
@@ -13676,7 +13641,11 @@ commands:new("unsuspendvc", {
 	usage = "unsuspendvc",
 	description = "Unsuspends you from voice chat",
 	callback = function(args, speaker)
-		VoiceChatService:joinVoice()
+		if not studio then
+			VoiceChatService:joinVoice()
+		else
+			notify('Roblox Studio Unsupported', 'This command only works in-game')
+		end
 	end
 })
 
@@ -13684,28 +13653,18 @@ local freezingua = nil
 frozenParts = {}
 
 commands:new("freezeunanchored", {
-	usage = "freezeunanchored",
-	aliases = {"freezeua"},
-	description = "Freezes unanchored parts in the workspace, excluding certain body parts",
+	usage = 'freezeunanchored',
+	aliases = { 'freezeua' },
+	description = 'Freezes all parts in the workspace and attempts to avoid any characters during the process.',
 	callback = function(args, speaker)
-		local badnames = {
-			"Head", "UpperTorso", "LowerTorso", "RightUpperArm", "LeftUpperArm", "RightLowerArm", "LeftLowerArm", 
-			"RightHand", "LeftHand", "RightUpperLeg", "LeftUpperLeg", "RightLowerLeg", "LeftLowerLeg", 
-			"RightFoot", "LeftFoot", "Torso", "Right Arm", "Left Arm", "Right Leg", "Left Leg", "HumanoidRootPart"
-		}
+		local function freezeUnanchored(v)
+			if v:IsA('BasePart') and not v.Anchored then
+				local character = v:FindFirstAncestorWhichIsA('Model')
+				local humanoid = character and character:FindFirstChildWhichIsA('Humanoid')
+				local rootpart = humanoid and humanoid.RootPart or (character and character:FindFirstChild('HumanoidRootPart'))
+				local player = humanoid and Players:GetPlayerFromCharacter(character)
 
-		local function FREEZENOOB(v)
-			if v:IsA("BasePart" or "UnionOperation") and v.Anchored == false then
-				local BADD = false
-				for i = 1, #badnames do
-					if v.Name == badnames[i] then
-						BADD = true
-					end
-				end
-				if speaker.Character and v:IsDescendantOf(speaker.Character) then
-					BADD = true
-				end
-				if not BADD then
+				if not (player or typeof(rootpart) == 'Instance' or humanoid) then
 					for i, c in pairs(v:GetChildren()) do
 						if c:IsA("BodyPosition") or c:IsA("BodyGyro") then
 							c:Destroy()
@@ -13727,9 +13686,10 @@ commands:new("freezeunanchored", {
 		end
 
 		for i, v in pairs(workspace:GetDescendants()) do
-			FREEZENOOB(v)
+			freezeUnanchored(v)
 		end
-		freezingua = workspace.DescendantAdded:Connect(FREEZENOOB)
+
+		freezingua = workspace.DescendantAdded:Connect(freezeUnanchored)
 	end
 })
 
@@ -13738,7 +13698,7 @@ commands:new("thawunanchored", {
 	aliases = {"thawua", "unfreezeunanchored", "unfreezeua"},
 	description = "Thaws previously frozen unanchored parts in the workspace",
 	callback = function(args, speaker)
-		if freezingua then
+		if typeof(freezingua) == 'RBXScriptConnection' and freezingua.Connected then
 			freezingua:Disconnect()
 		end
 		for i, v in pairs(frozenParts) do
