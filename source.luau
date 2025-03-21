@@ -565,14 +565,6 @@ Tooltip.BorderSizePixel = 0
 Tooltip.Size = UDim2.new(0, 200, 0, 96)
 Tooltip.Visible = false
 Tooltip.ZIndex = 10
-
-function updateTooltipScale()
-	local scale = Scale.Scale
-	Tooltip.Size = UDim2.fromOffset(200 * scale, 96 * scale)
-end
-
-updateTooltipScale()
-Scale:GetPropertyChangedSignal('Scale'):Connect(updateTooltipScale)
 table.insert(shade1, Tooltip)
 
 Title_3.Name = "Title"
@@ -5023,7 +5015,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 				local row = 0
 				local column = 0
-				
+
 				for i, v in pairs(basicColorsList) do
 					local newColor = colorChoice:Clone()
 					newColor.BackgroundColor3 = v
@@ -5123,13 +5115,13 @@ ColorsButton.MouseButton1Click:Connect(function()
 		picker:TweenPosition(UDim2.new(0.5, -219, 0, 100), "InOut", "Quart", 0.5, true, nil)
 
 		local Npicker = ColorPicker.new()
-		
+
 		Npicker.Confirm = function(self, color, ctype)
 			updateColors(color, ctype)
 			wait()
 			updatesaves()
 		end
-		
+
 		Npicker.Cancel = function(self)
 			updateColors(cache_currentShade1,shade1)
 			updateColors(cache_currentShade2,shade2)
@@ -6415,50 +6407,50 @@ function getPlayersByName(Name)
 end
 
 function getPlayers(list, speaker)
-    if list == nil then return {speaker} end
-    local nameList = splitString(list, ",")
+	if list == nil then return {speaker} end
+	local nameList = splitString(list, ",")
 
-    local foundList = {}
+	local foundList = {}
 
-    for _, name in pairs(nameList) do
-        if string.sub(name, 1, 1) ~= "+" and string.sub(name, 1, 1) ~= "-" then 
-            name = "+" .. name 
-        end
-        
-        local tokens = toTokens(name)
-        local initialPlayers = Players:GetPlayers()
+	for _, name in pairs(nameList) do
+		if string.sub(name, 1, 1) ~= "+" and string.sub(name, 1, 1) ~= "-" then 
+			name = "+" .. name 
+		end
 
-        for _, v in pairs(tokens) do
-            local tokenContent = v.Name
-            local foundCase = false
-            
-            for regex, case in pairs(SpecialPlayerCases) do
-                local matches = {string.match(tokenContent, "^" .. regex .. "$")}
-                if #matches > 0 then
-                    foundCase = true
-                    if v.Operator == "+" then
-                        initialPlayers = onlyIncludeInTable(initialPlayers, case(speaker, matches, initialPlayers))
-                    else
-                        initialPlayers = removeTableMatches(initialPlayers, case(speaker, matches, initialPlayers))
-                    end
-                end
-            end
-            
-            if not foundCase then
-                if v.Operator == "+" then
-                    initialPlayers = onlyIncludeInTable(initialPlayers, getPlayersByName(tokenContent))
-                else
-                    initialPlayers = removeTableMatches(initialPlayers, getPlayersByName(tokenContent))
-                end
-            end
-        end
+		local tokens = toTokens(name)
+		local initialPlayers = Players:GetPlayers()
 
-        for _, player in pairs(initialPlayers) do 
-            table.insert(foundList, player) 
-        end
-    end
+		for _, v in pairs(tokens) do
+			local tokenContent = v.Name
+			local foundCase = false
 
-    return foundList
+			for regex, case in pairs(SpecialPlayerCases) do
+				local matches = {string.match(tokenContent, "^" .. regex .. "$")}
+				if #matches > 0 then
+					foundCase = true
+					if v.Operator == "+" then
+						initialPlayers = onlyIncludeInTable(initialPlayers, case(speaker, matches, initialPlayers))
+					else
+						initialPlayers = removeTableMatches(initialPlayers, case(speaker, matches, initialPlayers))
+					end
+				end
+			end
+
+			if not foundCase then
+				if v.Operator == "+" then
+					initialPlayers = onlyIncludeInTable(initialPlayers, getPlayersByName(tokenContent))
+				else
+					initialPlayers = removeTableMatches(initialPlayers, getPlayersByName(tokenContent))
+				end
+			end
+		end
+
+		for _, player in pairs(initialPlayers) do 
+			table.insert(foundList, player) 
+		end
+	end
+
+	return foundList
 end
 
 function getPlayer(list, speaker)
@@ -9678,10 +9670,10 @@ function GetFocusDistance(cameraFrame)
 		local fx = cameraFrame.rightVector
 		local fy = cameraFrame.upVector
 		local fz = cameraFrame.lookVector
-	
+
 		local minVect = Vector3.new()
 		local minDist = 512
-	
+
 		for x = 0, 1, 0.5 do
 			for y = 0, 1, 0.5 do
 				local cx = (x - 0.5)*projx
@@ -9696,7 +9688,7 @@ function GetFocusDistance(cameraFrame)
 				end
 			end
 		end
-	
+
 		return fz:Dot(minVect)*minDist
 	end
 end
@@ -11039,24 +11031,6 @@ commands:new('unfreezeanims', {
 	end
 })
 
-commands:new('respawn', {
-	usage = 'respawn',
-	aliases = {},
-	description = 'Respawns the player\'s character.',
-	callback = function(args, speaker)
-		respawn(speaker)
-	end
-})
-
-commands:new('refresh', {
-	usage = 'refresh / re',
-	aliases = { 're' },
-	description = 'Refreshes the player\'s character.',
-	callback = function(args, speaker)
-		refresh(speaker)
-	end
-})
-
 commands:new('strengthen', {
 	usage = 'strengthen [strength]',
 	aliases = {},
@@ -12260,7 +12234,7 @@ commands:new('oldconsole', {
 })
 
 commands:new('explorer', {
-	usage = 'explorer / dex',
+	usage = 'explorer / dex (CLIENT)',
 	aliases = { 'dex' },
 	description = 'Loads an external script for Dex explorer.',
 	callback = function(args, speaker)
@@ -12285,7 +12259,7 @@ commands:new('explorer', {
 })
 
 commands:new('remotespy', {
-	usage = 'remotespy / rspy',
+	usage = 'remotespy / rspy (CLIENT)',
 	aliases = { 'rspy' },
 	description = 'Loads the SimpleSpy script for remote event spying.',
 	callback = function(args, speaker)
@@ -12310,7 +12284,7 @@ commands:new('remotespy', {
 })
 
 commands:new('audiologger', {
-	usage = 'audiologger / alogger',
+	usage = 'audiologger / alogger (CLIENT)',
 	aliases = { 'alogger' },
 	description = 'Loads and executes the audio logger script from a remote URL.',
 	callback = function(args, speaker)
@@ -15317,6 +15291,67 @@ commands:new('addallplugins', {
 	end
 })
 
+if studio then
+	local replicatedStorage = game:GetService('ReplicatedStorage')
+	local remoteEvent = replicatedStorage:WaitForChild('IYEvent')
+
+	if typeof(remoteEvent) == 'Instance' and remoteEvent:IsA('RemoteEvent') then
+		commands:new('kill', {
+			usage = 'kill / breakjoints [player]',
+			aliases = { 'breakjoints' },
+			description = 'Kill a player\'s character.',
+			callback = function(args, speaker)
+				local players = getPlayers(args[1], speaker)
+				if type(players) == 'table' then
+					remoteEvent:FireServer('kill', players)
+				end
+			end
+		})
+		
+		commands:new('respawn', {
+			usage = 'respawn',
+			aliases = {},
+			description = 'Respawns the given player\'s character(s)',
+			callback = function(args, speaker)
+				local players = getPlayers(args[1], speaker)
+				if type(players) == 'table' then
+					remoteEvent:FireServer('respawn', players)
+				end
+			end
+		})
+
+		commands:new('refresh', {
+			usage = 'refresh / re',
+			aliases = { 're' },
+			description = 'Refreshes the given player\'s character(s)',
+			callback = function(args, speaker)
+				local players = getPlayers(args[1], speaker)
+				if type(players) == 'table' then
+					remoteEvent:FireServer('refresh', players)
+				end
+			end
+		})
+	end
+else
+	commands:new('respawn', {
+		usage = 'respawn',
+		aliases = {},
+		description = 'Respawns the player\'s character.',
+		callback = function(args, speaker)
+			respawn(speaker)
+		end
+	})
+
+	commands:new('refresh', {
+		usage = 'refresh / re',
+		aliases = { 're' },
+		description = 'Refreshes the player\'s character.',
+		callback = function(args, speaker)
+			refresh(speaker)
+		end
+	})
+end
+
 refreshCommandList()
 
 if IsOnMobile then
@@ -15349,8 +15384,19 @@ end
 Scale.Scale = math.max(Holder.AbsoluteSize.X / 1920, guiScale)
 Scale.Parent = ScaledHolder
 ScaledHolder.Size = UDim2.fromScale(1 / Scale.Scale, 1 / Scale.Scale)
+
+local tooltipSize = Tooltip.Size
+local tooltipTitleTextSize = Title_3.TextSize
+local tooltipDescTextSize = Description.TextSize
+
 Scale:GetPropertyChangedSignal("Scale"):Connect(function()
-	ScaledHolder.Size = UDim2.fromScale(1 / Scale.Scale, 1 / Scale.Scale)
+	local scale = Scale.Scale
+
+	Tooltip.Size = UDim2.fromScale(tooltipSize.X.Scale * scale, tooltipSize.Y.Scale * scale)
+	Title_3.TextSize = tooltipTitleTextSize * scale
+	Description.TextSize = tooltipDescTextSize * scale
+	ScaledHolder.Size = UDim2.fromScale(1 / scale, 1 / scale)
+
 	for _, v in ScaledHolder:GetDescendants() do
 		if v:IsA("GuiObject") and v.Visible then
 			v.Visible = false
@@ -15474,9 +15520,9 @@ eventEditor.FireEvent("OnExecute")
 
 if aliases and #aliases > 0 then
 	local cmdMap = {}
-	for i,v in pairs(cmds) do
-		cmdMap[v.NAME:lower()] = v
-		for _,alias in pairs(v.ALIAS) do
+	for name, info in pairs(list) do
+		cmdMap[name:lower()] = v
+		for _, alias in pairs(info.aliases) do
 			cmdMap[alias:lower()] = v
 		end
 	end
