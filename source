@@ -213,7 +213,7 @@ Title.BorderSizePixel = 0
 Title.Size = UDim2.new(0, 250, 0, 20)
 Title.Font = Enum.Font.SourceSans
 Title.TextSize = 18
-Title.Text = 'thuarnel\'s IY'
+Title.Text = 'integralnerd\'s IY'
 
 do
 	local emoji = ({
@@ -5994,14 +5994,6 @@ Close_4.MouseButton1Click:Connect(function()
 	PluginsFrame:TweenPosition(UDim2.new(0, 0, 0, 175), "InOut", "Quart", 0.5, true, nil)
 end)
 
-local TeleportCheck = false
-Players.LocalPlayer.OnTeleport:Connect(function(State)
-	if KeepInfYield and (not TeleportCheck) and queueteleport then
-		TeleportCheck = true
-		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/thuarnel/infiniteyield/master/source'))()")
-	end
-end)
-
 commands:new('addalias', {
 	usage = 'addalias [command] [alias]',
 	aliases = {},
@@ -7892,6 +7884,7 @@ commands:new('esptransparency', {
 
 local espParts = {}
 local partEspTrigger = nil
+
 function partAdded(part)
 	if #espParts > 0 then
 		if FindInTable(espParts,part.Name:lower()) then
@@ -9326,7 +9319,7 @@ commands:new('loopbring', {
 })
 
 commands:new('unloopbring', {
-	usage = 'unloopbring <player>',
+	usage = 'unloopbring [player]',
 	aliases = { 'noloopbring' },
 	description = 'Stops the loop bringing the specified player.',
 	callback = function(args, speaker)
@@ -11253,7 +11246,6 @@ function getTorso(x)
 	return nil
 end
 
---[[
 commands:new("bang", {
 	usage = "bang [player] [speed]",
 	aliases = {},
@@ -11305,7 +11297,6 @@ commands:new("unbang", {
 		end
 	end
 })
-]]
 
 commands:new('carpet', {
 	usage = 'carpet [player]',
@@ -13713,7 +13704,7 @@ commands:new("thawunanchored", {
 })
 
 commands:new('tpunanchored', {
-	usage = 'tpunanchored <player>',
+	usage = 'tpunanchored [player]',
 	aliases = { 'tpua' },
 	description = 'Teleports unanchored parts to a player\'s position.',
 	callback = function(args, speaker)
@@ -13820,7 +13811,7 @@ autoKeyPressing = false
 cancelAutoKeyPress = nil
 
 commands:new('autokeypress', {
-	usage = 'autokeypress <key> [clickDelay] [releaseDelay]',
+	usage = 'autokeypress [key] [clickDelay] [releaseDelay]',
 	aliases = { 'keypress' },
 	description = 'Automatically presses a key with a set delay.',
 	callback = function(args, speaker)
@@ -13874,7 +13865,7 @@ commands:new('unautokeypress', {
 })
 
 commands:new('addplugin', {
-	usage = 'addplugin <plugin>',
+	usage = 'addplugin [plugin]',
 	aliases = { 'plugin' },
 	description = 'Adds a plugin via command.',
 	callback = function(args, speaker)
@@ -13883,7 +13874,7 @@ commands:new('addplugin', {
 })
 
 commands:new('removeplugin', {
-	usage = 'removeplugin <plugin>',
+	usage = 'removeplugin [plugin]',
 	aliases = { 'deleteplugin' },
 	description = 'Removes a plugin via command.',
 	callback = function(args, speaker)
@@ -13892,7 +13883,7 @@ commands:new('removeplugin', {
 })
 
 commands:new('reloadplugin', {
-	usage = 'reloadplugin <plugin>',
+	usage = 'reloadplugin [plugin]',
 	aliases = {},
 	description = 'Reloads a plugin.',
 	callback = function(args, speaker)
