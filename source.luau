@@ -3356,7 +3356,9 @@ function updateColors(color,ctype)
 	end
 end
 
+local picker
 local colorpickerOpen = false
+
 ColorsButton.MouseButton1Click:Connect(function()
 	local cache_currentShade1 = currentShade1
 	local cache_currentShade2 = currentShade2
@@ -3366,8 +3368,1325 @@ ColorsButton.MouseButton1Click:Connect(function()
 	local cache_currentScroll = currentScroll
 	if not colorpickerOpen then
 		colorpickerOpen = true
-		picker = game:GetObjects("rbxassetid://4908465318")[1]
-		picker.Name = randomString()
+
+		picker = Instance.new("Frame")
+		picker.Name = "Drag"
+		picker.BackgroundTransparency = 1
+		picker.Position = UDim2.new(0.5, -219, 0, -500)
+		picker.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		picker.ZIndex = 10
+		picker.BackgroundColor3 = Color3.new(1, 1, 1)
+		picker.Size = UDim2.new(0, 450, 0, 20)
+
+		local colorPicker = Instance.new("Frame")
+		colorPicker.Name = "ColorPicker"
+		colorPicker.BackgroundColor3 = Color3.new(0.392, 0.392, 0.392)
+		colorPicker.BackgroundTransparency = 1
+		colorPicker.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		colorPicker.ZIndex = 10
+		colorPicker.BorderSizePixel = 0
+		colorPicker.Size = UDim2.new(0, 450, 0, 330)
+		colorPicker.Parent = picker
+
+		local content = Instance.new("Frame")
+		content.Name = "Content"
+		content.BackgroundColor3 = Color3.new(0.141, 0.141, 0.145)
+		content.BorderColor3 = Color3.new()
+		content.Position = UDim2.new(0, 1, 0, 20)
+		content.Active = true
+		content.BorderSizePixel = 0
+		content.Size = UDim2.new(1, -2, 1, -25)
+		content.Parent = colorPicker
+
+		local shade3Button = Instance.new("TextButton")
+		shade3Button.Name = "Shade3"
+		shade3Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		shade3Button.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		shade3Button.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		shade3Button.Text = "Shade3"
+		shade3Button.AutoButtonColor = false
+		shade3Button.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		shade3Button.BorderSizePixel = 0
+		shade3Button.Position = UDim2.new(0.845, -213, 1, -23)
+		shade3Button.ZIndex = 10
+		shade3Button.TextSize = 14
+		shade3Button.Size = UDim2.new(0, 45, 0, 20)
+		shade3Button.Parent = content
+
+		local preview = Instance.new("Frame")
+		preview.Name = "Preview"
+		preview.BackgroundColor3 = Color3.new(1, 1, 1)
+		preview.Position = UDim2.new(1, -260, 0, 211)
+		preview.ZIndex = 10
+		preview.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		preview.Size = UDim2.new(0, 35, 1, -245)
+		preview.Parent = content
+
+		local text1Button = Instance.new("TextButton")
+		text1Button.Name = "Text1"
+		text1Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		text1Button.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		text1Button.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		text1Button.Text = "Text1"
+		text1Button.AutoButtonColor = false
+		text1Button.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		text1Button.BorderSizePixel = 0
+		text1Button.Position = UDim2.new(0.95, -213, 1, -23)
+		text1Button.ZIndex = 10
+		text1Button.TextSize = 14
+		text1Button.Size = UDim2.new(0, 45, 0, 20)
+		text1Button.Parent = content
+
+		local scrollButton = Instance.new("TextButton")
+		scrollButton.Name = "Scroll"
+		scrollButton.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		scrollButton.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		scrollButton.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		scrollButton.Text = "Scroll"
+		scrollButton.AutoButtonColor = false
+		scrollButton.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		scrollButton.BorderSizePixel = 0
+		scrollButton.Position = UDim2.new(1.16, -213, 1, -23)
+		scrollButton.ZIndex = 10
+		scrollButton.TextSize = 14
+		scrollButton.Size = UDim2.new(0, 45, 0, 20)
+		scrollButton.Parent = content
+
+		local default = Instance.new("TextButton")
+		default.Name = "Default"
+		default.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		default.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		default.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		default.Text = "Defaults"
+		default.AutoButtonColor = false
+		default.BackgroundColor3 = Color3.new(0.306, 0.306, 0.31)
+		default.BorderSizePixel = 0
+		default.Position = UDim2.new(1.26, -213, 1, -23)
+		default.ZIndex = 10
+		default.TextSize = 14
+		default.Size = UDim2.new(0, 45, 0, 20)
+		default.Parent = content
+
+		local basicColors = Instance.new("Frame")
+		basicColors.Name = "BasicColors"
+		basicColors.BackgroundColor3 = Color3.new(1, 1, 1)
+		basicColors.BackgroundTransparency = 1
+		basicColors.Position = UDim2.new(0, 5, 0, 5)
+		basicColors.ZIndex = 10
+		basicColors.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		basicColors.Size = UDim2.new(0, 180, 0, 200)
+		basicColors.Parent = content
+
+		local title = Instance.new("TextLabel")
+		title.Name = "Title"
+		title.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title.Text = "Basic Colors"
+		title.BackgroundColor3 = Color3.new(1, 1, 1)
+		title.Position = UDim2.new(0, 0, 0, -5)
+		title.BackgroundTransparency = 1
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.ZIndex = 10
+		title.TextSize = 14
+		title.Size = UDim2.new(1, 0, 0, 26)
+		title.Parent = basicColors
+
+		local cancel = Instance.new("TextButton")
+		cancel.Name = "Cancel"
+		cancel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		cancel.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		cancel.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		cancel.Text = "Cancel"
+		cancel.AutoButtonColor = false
+		cancel.BackgroundColor3 = Color3.new(0.306, 0.306, 0.31)
+		cancel.BorderSizePixel = 0
+		cancel.Position = UDim2.new(1.37, -213, 1, -23)
+		cancel.ZIndex = 10
+		cancel.TextSize = 14
+		cancel.Size = UDim2.new(0, 45, 0, 20)
+		cancel.Parent = content
+
+		local text2Button = Instance.new("TextButton")
+		text2Button.Name = "Text2"
+		text2Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		text2Button.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		text2Button.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		text2Button.Text = "Text2"
+		text2Button.AutoButtonColor = false
+		text2Button.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		text2Button.BorderSizePixel = 0
+		text2Button.Position = UDim2.new(1.05, -213, 1, -23)
+		text2Button.ZIndex = 10
+		text2Button.TextSize = 14
+		text2Button.Size = UDim2.new(0, 45, 0, 20)
+		text2Button.Parent = content
+
+		local colorStrip = Instance.new("ImageLabel")
+		colorStrip.Name = "ColorStrip"
+		colorStrip.BackgroundColor3 = Color3.new(1, 1, 1)
+		colorStrip.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		colorStrip.Position = UDim2.new(1, -30, 0, 5)
+		colorStrip.ZIndex = 10
+		colorStrip.ImageContent = Content.fromAssetId(1072518502)
+		colorStrip.Size = UDim2.new(0, 13, 0, 200)
+		colorStrip.Parent = content
+
+		local blue = Instance.new("Frame")
+		blue.Name = "Blue"
+		blue.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		blue.Position = UDim2.new(1, -63, 0, 255)
+		blue.ZIndex = 10
+		blue.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		blue.Size = UDim2.new(0, 52, 0, 16)
+		blue.Parent = content
+
+		local title_2 = Instance.new("TextLabel")
+		title_2.Name = "Title"
+		title_2.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_2.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_2.Text = "Blue:"
+		title_2.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_2.Position = UDim2.new(0, -40, 0, 0)
+		title_2.BackgroundTransparency = 1
+		title_2.TextXAlignment = Enum.TextXAlignment.Right
+		title_2.ZIndex = 10
+		title_2.TextSize = 14
+		title_2.Size = UDim2.new(0, 34, 1, 0)
+		title_2.Parent = blue
+
+		local blueInput = Instance.new("TextBox")
+		blueInput.Name = "Input"
+		blueInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		blueInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		blueInput.Text = "0"
+		blueInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		blueInput.Position = UDim2.new(0, 2, 0, 0)
+		blueInput.BackgroundTransparency = 1
+		blueInput.TextXAlignment = Enum.TextXAlignment.Left
+		blueInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		blueInput.ZIndex = 10
+		blueInput.TextSize = 14
+		blueInput.Size = UDim2.new(0, 50, 0, 16)
+		blueInput.Parent = blue
+
+		local arrowFrame = Instance.new("Frame")
+		arrowFrame.Name = "ArrowFrame"
+		arrowFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame.BackgroundTransparency = 1
+		arrowFrame.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame.ZIndex = 10
+		arrowFrame.BorderSizePixel = 0
+		arrowFrame.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame.Parent = blueInput
+
+		local up = Instance.new("TextButton")
+		up.Name = "Up"
+		up.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up.Text = ""
+		up.AutoButtonColor = false
+		up.BackgroundColor3 = Color3.new(1, 1, 1)
+		up.BackgroundTransparency = 1
+		up.BorderSizePixel = 0
+		up.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up.ZIndex = 10
+		up.TextSize = 14
+		up.Size = UDim2.new(1, 0, 0, 8)
+		up.Parent = arrowFrame
+
+		local colorArrow = Instance.new("Frame")
+		colorArrow.Name = "Arrow"
+		colorArrow.BackgroundTransparency = 1
+		colorArrow.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		colorArrow.ZIndex = 10
+		colorArrow.Size = UDim2.new(0, 16, 0, 8)
+		colorArrow.Parent = up
+
+		local frame = Instance.new("Frame")
+		frame.Name = "Frame"
+		frame.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame.Position = UDim2.new(0, 8, 0, 3)
+		frame.ZIndex = 10
+		frame.BorderSizePixel = 0
+		frame.Size = UDim2.new(0, 1, 0, 1)
+		frame.Parent = colorArrow
+
+		local frame_2 = Instance.new("Frame")
+		frame_2.Name = "Frame"
+		frame_2.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_2.Position = UDim2.new(0, 7, 0, 4)
+		frame_2.ZIndex = 10
+		frame_2.BorderSizePixel = 0
+		frame_2.Size = UDim2.new(0, 3, 0, 1)
+		frame_2.Parent = colorArrow
+
+		local frame_3 = Instance.new("Frame")
+		frame_3.Name = "Frame"
+		frame_3.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_3.Position = UDim2.new(0, 6, 0, 5)
+		frame_3.ZIndex = 10
+		frame_3.BorderSizePixel = 0
+		frame_3.Size = UDim2.new(0, 5, 0, 1)
+		frame_3.Parent = colorArrow
+
+		local down = Instance.new("TextButton")
+		down.Name = "Down"
+		down.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down.Text = ""
+		down.AutoButtonColor = false
+		down.BackgroundColor3 = Color3.new(1, 1, 1)
+		down.BorderSizePixel = 0
+		down.BackgroundTransparency = 1
+		down.Position = UDim2.new(0, 0, 0, 8)
+		down.ZIndex = 10
+		down.TextSize = 14
+		down.Size = UDim2.new(1, 0, 0, 8)
+		down.Parent = arrowFrame
+
+		local arrow_2 = Instance.new("Frame")
+		arrow_2.Name = "Arrow"
+		arrow_2.BackgroundTransparency = 1
+		arrow_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_2.ZIndex = 10
+		arrow_2.Size = UDim2.new(0, 16, 0, 8)
+		arrow_2.Parent = down
+
+		local frame_4 = Instance.new("Frame")
+		frame_4.Name = "Frame"
+		frame_4.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_4.Position = UDim2.new(0, 6, 0, 3)
+		frame_4.ZIndex = 10
+		frame_4.BorderSizePixel = 0
+		frame_4.Size = UDim2.new(0, 5, 0, 1)
+		frame_4.Parent = arrow_2
+
+		local frame_5 = Instance.new("Frame")
+		frame_5.Name = "Frame"
+		frame_5.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_5.Position = UDim2.new(0, 7, 0, 4)
+		frame_5.ZIndex = 10
+		frame_5.BorderSizePixel = 0
+		frame_5.Size = UDim2.new(0, 3, 0, 1)
+		frame_5.Parent = arrow_2
+
+		local frame_6 = Instance.new("Frame")
+		frame_6.Name = "Frame"
+		frame_6.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_6.Position = UDim2.new(0, 8, 0, 5)
+		frame_6.ZIndex = 10
+		frame_6.BorderSizePixel = 0
+		frame_6.Size = UDim2.new(0, 1, 0, 1)
+		frame_6.Parent = arrow_2
+
+		local customColors = Instance.new("Frame")
+		customColors.Name = "CustomColors"
+		customColors.BackgroundColor3 = Color3.new(1, 1, 1)
+		customColors.BackgroundTransparency = 1
+		customColors.Position = UDim2.new(0, 5, 0, 210)
+		customColors.ZIndex = 10
+		customColors.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		customColors.Size = UDim2.new(0, 180, 0, 90)
+		customColors.Parent = content
+
+		local title_3 = Instance.new("TextLabel")
+		title_3.Name = "Title"
+		title_3.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_3.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_3.Text = "Custom Colors (right click to set)"
+		title_3.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_3.BackgroundTransparency = 1
+		title_3.TextXAlignment = Enum.TextXAlignment.Left
+		title_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_3.ZIndex = 10
+		title_3.TextSize = 14
+		title_3.Size = UDim2.new(1, 0, 0, 20)
+		title_3.Parent = customColors
+
+		local hue = Instance.new("Frame")
+		hue.Name = "Hue"
+		hue.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		hue.Position = UDim2.new(1, -180, 0, 211)
+		hue.ZIndex = 10
+		hue.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		hue.Size = UDim2.new(0, 52, 0, 16)
+		hue.Parent = content
+
+		local hueInput = Instance.new("TextBox")
+		hueInput.Name = "Input"
+		hueInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		hueInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		hueInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		hueInput.Text = "0"
+		hueInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		hueInput.Position = UDim2.new(0, 2, 0, 0)
+		hueInput.BackgroundTransparency = 1
+		hueInput.TextXAlignment = Enum.TextXAlignment.Left
+		hueInput.ZIndex = 10
+		hueInput.TextSize = 14
+		hueInput.Size = UDim2.new(0, 50, 0, 16)
+		hueInput.Parent = hue
+
+		local arrowFrame_2 = Instance.new("Frame")
+		arrowFrame_2.Name = "ArrowFrame"
+		arrowFrame_2.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_2.BackgroundTransparency = 1
+		arrowFrame_2.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame_2.ZIndex = 10
+		arrowFrame_2.BorderSizePixel = 0
+		arrowFrame_2.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame_2.Parent = hueInput
+
+		local up_2 = Instance.new("TextButton")
+		up_2.Name = "Up"
+		up_2.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up_2.Text = ""
+		up_2.AutoButtonColor = false
+		up_2.BackgroundColor3 = Color3.new(1, 1, 1)
+		up_2.BackgroundTransparency = 1
+		up_2.BorderSizePixel = 0
+		up_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up_2.ZIndex = 10
+		up_2.TextSize = 14
+		up_2.Size = UDim2.new(1, 0, 0, 8)
+		up_2.Parent = arrowFrame_2
+
+		local arrow_3 = Instance.new("Frame")
+		arrow_3.Name = "Arrow"
+		arrow_3.BackgroundTransparency = 1
+		arrow_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_3.ZIndex = 10
+		arrow_3.Size = UDim2.new(0, 16, 0, 8)
+		arrow_3.Parent = up_2
+
+		local frame_7 = Instance.new("Frame")
+		frame_7.Name = "Frame"
+		frame_7.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_7.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_7.Position = UDim2.new(0, 7, 0, 4)
+		frame_7.ZIndex = 10
+		frame_7.BorderSizePixel = 0
+		frame_7.Size = UDim2.new(0, 3, 0, 1)
+		frame_7.Parent = arrow_3
+
+		local frame_8 = Instance.new("Frame")
+		frame_8.Name = "Frame"
+		frame_8.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_8.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_8.Position = UDim2.new(0, 6, 0, 5)
+		frame_8.ZIndex = 10
+		frame_8.BorderSizePixel = 0
+		frame_8.Size = UDim2.new(0, 5, 0, 1)
+		frame_8.Parent = arrow_3
+
+		local frame_9 = Instance.new("Frame")
+		frame_9.Name = "Frame"
+		frame_9.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_9.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_9.Position = UDim2.new(0, 8, 0, 3)
+		frame_9.ZIndex = 10
+		frame_9.BorderSizePixel = 0
+		frame_9.Size = UDim2.new(0, 1, 0, 1)
+		frame_9.Parent = arrow_3
+
+		local down_2 = Instance.new("TextButton")
+		down_2.Name = "Down"
+		down_2.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down_2.Text = ""
+		down_2.AutoButtonColor = false
+		down_2.BackgroundColor3 = Color3.new(1, 1, 1)
+		down_2.BorderSizePixel = 0
+		down_2.BackgroundTransparency = 1
+		down_2.Position = UDim2.new(0, 0, 0, 8)
+		down_2.ZIndex = 10
+		down_2.TextSize = 14
+		down_2.Size = UDim2.new(1, 0, 0, 8)
+		down_2.Parent = arrowFrame_2
+
+		local arrow_4 = Instance.new("Frame")
+		arrow_4.Name = "Arrow"
+		arrow_4.BackgroundTransparency = 1
+		arrow_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_4.ZIndex = 10
+		arrow_4.Size = UDim2.new(0, 16, 0, 8)
+		arrow_4.Parent = down_2
+
+		local frame_10 = Instance.new("Frame")
+		frame_10.Name = "Frame"
+		frame_10.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_10.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_10.Position = UDim2.new(0, 6, 0, 3)
+		frame_10.ZIndex = 10
+		frame_10.BorderSizePixel = 0
+		frame_10.Size = UDim2.new(0, 5, 0, 1)
+		frame_10.Parent = arrow_4
+
+		local frame_11 = Instance.new("Frame")
+		frame_11.Name = "Frame"
+		frame_11.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_11.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_11.Position = UDim2.new(0, 8, 0, 5)
+		frame_11.ZIndex = 10
+		frame_11.BorderSizePixel = 0
+		frame_11.Size = UDim2.new(0, 1, 0, 1)
+		frame_11.Parent = arrow_4
+
+		local frame_12 = Instance.new("Frame")
+		frame_12.Name = "Frame"
+		frame_12.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_12.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_12.Position = UDim2.new(0, 7, 0, 4)
+		frame_12.ZIndex = 10
+		frame_12.BorderSizePixel = 0
+		frame_12.Size = UDim2.new(0, 3, 0, 1)
+		frame_12.Parent = arrow_4
+
+		local title_4 = Instance.new("TextLabel")
+		title_4.Name = "Title"
+		title_4.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_4.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_4.Text = "Hue:"
+		title_4.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_4.Position = UDim2.new(0, -40, 0, 0)
+		title_4.BackgroundTransparency = 1
+		title_4.TextXAlignment = Enum.TextXAlignment.Right
+		title_4.ZIndex = 10
+		title_4.TextSize = 14
+		title_4.Size = UDim2.new(0, 34, 1, 0)
+		title_4.Parent = hue
+
+		local colorSpaceFrame = Instance.new("Frame")
+		colorSpaceFrame.Name = "ColorSpaceFrame"
+		colorSpaceFrame.BackgroundColor3 = Color3.new(0.376, 0.376, 0.376)
+		colorSpaceFrame.Position = UDim2.new(1, -261, 0, 4)
+		colorSpaceFrame.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		colorSpaceFrame.ClipsDescendants = true
+		colorSpaceFrame.ZIndex = 10
+		colorSpaceFrame.BorderSizePixel = 0
+		colorSpaceFrame.Size = UDim2.new(0, 222, 0, 202)
+		colorSpaceFrame.Parent = content
+
+		local colorSpace = Instance.new("ImageLabel")
+		colorSpace.Name = "ColorSpace"
+		colorSpace.BackgroundColor3 = Color3.new(1, 1, 1)
+		colorSpace.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		colorSpace.Position = UDim2.new(0, 1, 0, 1)
+		colorSpace.ImageContent = Content.fromAssetId(1072518406)
+		colorSpace.ZIndex = 10
+		colorSpace.BorderSizePixel = 0
+		colorSpace.Size = UDim2.new(0, 220, 0, 200)
+		colorSpace.Parent = colorSpaceFrame
+
+		local colorScope = Instance.new("Frame")
+		colorScope.Name = "Scope"
+		colorScope.BackgroundColor3 = Color3.new(1, 1, 1)
+		colorScope.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		colorScope.BackgroundTransparency = 1
+		colorScope.Position = UDim2.new(0, 210, 0, 190)
+		colorScope.ZIndex = 10
+		colorScope.BorderSizePixel = 0
+		colorScope.Size = UDim2.new(0, 20, 0, 20)
+		colorScope.Parent = colorSpace
+
+		local line = Instance.new("Frame")
+		line.Name = "Line"
+		line.BackgroundColor3 = Color3.new()
+		line.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		line.Position = UDim2.new(0, 9, 0, 0)
+		line.ZIndex = 10
+		line.BorderSizePixel = 0
+		line.Size = UDim2.new(0, 2, 0, 20)
+		line.Parent = colorScope
+
+		local line_2 = Instance.new("Frame")
+		line_2.Name = "Line"
+		line_2.BackgroundColor3 = Color3.new()
+		line_2.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		line_2.Position = UDim2.new(0, 0, 0, 9)
+		line_2.ZIndex = 10
+		line_2.BorderSizePixel = 0
+		line_2.Size = UDim2.new(0, 20, 0, 2)
+		line_2.Parent = colorScope
+
+		local red = Instance.new("Frame")
+		red.Name = "Red"
+		red.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		red.Position = UDim2.new(1, -63, 0, 211)
+		red.ZIndex = 10
+		red.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		red.Size = UDim2.new(0, 52, 0, 16)
+		red.Parent = content
+
+		local title_5 = Instance.new("TextLabel")
+		title_5.Name = "Title"
+		title_5.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_5.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_5.Text = "Red:"
+		title_5.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_5.Position = UDim2.new(0, -40, 0, 0)
+		title_5.BackgroundTransparency = 1
+		title_5.TextXAlignment = Enum.TextXAlignment.Right
+		title_5.ZIndex = 10
+		title_5.TextSize = 14
+		title_5.Size = UDim2.new(0, 34, 1, 0)
+		title_5.Parent = red
+
+		local redInput = Instance.new("TextBox")
+		redInput.Name = "Input"
+		redInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		redInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		redInput.Text = "0"
+		redInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		redInput.Position = UDim2.new(0, 2, 0, 0)
+		redInput.BackgroundTransparency = 1
+		redInput.TextXAlignment = Enum.TextXAlignment.Left
+		redInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		redInput.ZIndex = 10
+		redInput.TextSize = 14
+		redInput.Size = UDim2.new(0, 50, 0, 16)
+		redInput.Parent = red
+
+		local arrowFrame_3 = Instance.new("Frame")
+		arrowFrame_3.Name = "ArrowFrame"
+		arrowFrame_3.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_3.BackgroundTransparency = 1
+		arrowFrame_3.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame_3.ZIndex = 10
+		arrowFrame_3.BorderSizePixel = 0
+		arrowFrame_3.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame_3.Parent = redInput
+
+		local up_3 = Instance.new("TextButton")
+		up_3.Name = "Up"
+		up_3.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up_3.Text = ""
+		up_3.AutoButtonColor = false
+		up_3.BackgroundColor3 = Color3.new(1, 1, 1)
+		up_3.BackgroundTransparency = 1
+		up_3.BorderSizePixel = 0
+		up_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up_3.ZIndex = 10
+		up_3.TextSize = 14
+		up_3.Size = UDim2.new(1, 0, 0, 8)
+		up_3.Parent = arrowFrame_3
+
+		local arrow_5 = Instance.new("Frame")
+		arrow_5.Name = "Arrow"
+		arrow_5.BackgroundTransparency = 1
+		arrow_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_5.ZIndex = 10
+		arrow_5.Size = UDim2.new(0, 16, 0, 8)
+		arrow_5.Parent = up_3
+
+		local frame_13 = Instance.new("Frame")
+		frame_13.Name = "Frame"
+		frame_13.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_13.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_13.Position = UDim2.new(0, 6, 0, 5)
+		frame_13.ZIndex = 10
+		frame_13.BorderSizePixel = 0
+		frame_13.Size = UDim2.new(0, 5, 0, 1)
+		frame_13.Parent = arrow_5
+
+		local frame_14 = Instance.new("Frame")
+		frame_14.Name = "Frame"
+		frame_14.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_14.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_14.Position = UDim2.new(0, 8, 0, 3)
+		frame_14.ZIndex = 10
+		frame_14.BorderSizePixel = 0
+		frame_14.Size = UDim2.new(0, 1, 0, 1)
+		frame_14.Parent = arrow_5
+
+		local frame_15 = Instance.new("Frame")
+		frame_15.Name = "Frame"
+		frame_15.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_15.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_15.Position = UDim2.new(0, 7, 0, 4)
+		frame_15.ZIndex = 10
+		frame_15.BorderSizePixel = 0
+		frame_15.Size = UDim2.new(0, 3, 0, 1)
+		frame_15.Parent = arrow_5
+
+		local down_3 = Instance.new("TextButton")
+		down_3.Name = "Down"
+		down_3.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down_3.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down_3.Text = ""
+		down_3.AutoButtonColor = false
+		down_3.BackgroundColor3 = Color3.new(1, 1, 1)
+		down_3.BorderSizePixel = 0
+		down_3.BackgroundTransparency = 1
+		down_3.Position = UDim2.new(0, 0, 0, 8)
+		down_3.ZIndex = 10
+		down_3.TextSize = 14
+		down_3.Size = UDim2.new(1, 0, 0, 8)
+		down_3.Parent = arrowFrame_3
+
+		local arrow_6 = Instance.new("Frame")
+		arrow_6.Name = "Arrow"
+		arrow_6.BackgroundTransparency = 1
+		arrow_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_6.ZIndex = 10
+		arrow_6.Size = UDim2.new(0, 16, 0, 8)
+		arrow_6.Parent = down_3
+
+		local frame_16 = Instance.new("Frame")
+		frame_16.Name = "Frame"
+		frame_16.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_16.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_16.Position = UDim2.new(0, 6, 0, 3)
+		frame_16.ZIndex = 10
+		frame_16.BorderSizePixel = 0
+		frame_16.Size = UDim2.new(0, 5, 0, 1)
+		frame_16.Parent = arrow_6
+
+		local frame_17 = Instance.new("Frame")
+		frame_17.Name = "Frame"
+		frame_17.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_17.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_17.Position = UDim2.new(0, 8, 0, 5)
+		frame_17.ZIndex = 10
+		frame_17.BorderSizePixel = 0
+		frame_17.Size = UDim2.new(0, 1, 0, 1)
+		frame_17.Parent = arrow_6
+
+		local frame_18 = Instance.new("Frame")
+		frame_18.Name = "Frame"
+		frame_18.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_18.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_18.Position = UDim2.new(0, 7, 0, 4)
+		frame_18.ZIndex = 10
+		frame_18.BorderSizePixel = 0
+		frame_18.Size = UDim2.new(0, 3, 0, 1)
+		frame_18.Parent = arrow_6
+
+		local shade1Button = Instance.new("TextButton")
+		shade1Button.Name = "Shade1"
+		shade1Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		shade1Button.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		shade1Button.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		shade1Button.Text = "Shade1"
+		shade1Button.AutoButtonColor = false
+		shade1Button.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		shade1Button.BorderSizePixel = 0
+		shade1Button.Position = UDim2.new(0.635, -213, 1, -23)
+		shade1Button.ZIndex = 10
+		shade1Button.TextSize = 14
+		shade1Button.Size = UDim2.new(0, 45, 0, 20)
+		shade1Button.Parent = content
+
+		local shade2Button = Instance.new("TextButton")
+		shade2Button.Name = "Shade2"
+		shade2Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		shade2Button.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		shade2Button.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		shade2Button.Text = "Shade2"
+		shade2Button.AutoButtonColor = false
+		shade2Button.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		shade2Button.BorderSizePixel = 0
+		shade2Button.Position = UDim2.new(0.74, -213, 1, -23)
+		shade2Button.ZIndex = 10
+		shade2Button.TextSize = 14
+		shade2Button.Size = UDim2.new(0, 45, 0, 20)
+		shade2Button.Parent = content
+
+		local sat = Instance.new("Frame")
+		sat.Name = "Sat"
+		sat.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		sat.Position = UDim2.new(1, -180, 0, 233)
+		sat.ZIndex = 10
+		sat.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		sat.Size = UDim2.new(0, 52, 0, 16)
+		sat.Parent = content
+
+		local title_6 = Instance.new("TextLabel")
+		title_6.Name = "Title"
+		title_6.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_6.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_6.Text = "Sat:"
+		title_6.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_6.Position = UDim2.new(0, -40, 0, 0)
+		title_6.BackgroundTransparency = 1
+		title_6.TextXAlignment = Enum.TextXAlignment.Right
+		title_6.ZIndex = 10
+		title_6.TextSize = 14
+		title_6.Size = UDim2.new(0, 34, 1, 0)
+		title_6.Parent = sat
+
+		local satInput = Instance.new("TextBox")
+		satInput.Name = "Input"
+		satInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		satInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		satInput.Text = "0"
+		satInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		satInput.Position = UDim2.new(0, 2, 0, 0)
+		satInput.BackgroundTransparency = 1
+		satInput.TextXAlignment = Enum.TextXAlignment.Left
+		satInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		satInput.ZIndex = 10
+		satInput.TextSize = 14
+		satInput.Size = UDim2.new(0, 50, 0, 16)
+		satInput.Parent = sat
+
+		local arrowFrame_4 = Instance.new("Frame")
+		arrowFrame_4.Name = "ArrowFrame"
+		arrowFrame_4.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_4.BackgroundTransparency = 1
+		arrowFrame_4.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame_4.ZIndex = 10
+		arrowFrame_4.BorderSizePixel = 0
+		arrowFrame_4.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame_4.Parent = satInput
+
+		local up_4 = Instance.new("TextButton")
+		up_4.Name = "Up"
+		up_4.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up_4.Text = ""
+		up_4.AutoButtonColor = false
+		up_4.BackgroundColor3 = Color3.new(1, 1, 1)
+		up_4.BackgroundTransparency = 1
+		up_4.BorderSizePixel = 0
+		up_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up_4.ZIndex = 10
+		up_4.TextSize = 14
+		up_4.Size = UDim2.new(1, 0, 0, 8)
+		up_4.Parent = arrowFrame_4
+
+		local arrow_7 = Instance.new("Frame")
+		arrow_7.Name = "Arrow"
+		arrow_7.BackgroundTransparency = 1
+		arrow_7.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_7.ZIndex = 10
+		arrow_7.Size = UDim2.new(0, 16, 0, 8)
+		arrow_7.Parent = up_4
+
+		local frame_19 = Instance.new("Frame")
+		frame_19.Name = "Frame"
+		frame_19.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_19.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_19.Position = UDim2.new(0, 7, 0, 4)
+		frame_19.ZIndex = 10
+		frame_19.BorderSizePixel = 0
+		frame_19.Size = UDim2.new(0, 3, 0, 1)
+		frame_19.Parent = arrow_7
+
+		local frame_20 = Instance.new("Frame")
+		frame_20.Name = "Frame"
+		frame_20.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_20.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_20.Position = UDim2.new(0, 6, 0, 5)
+		frame_20.ZIndex = 10
+		frame_20.BorderSizePixel = 0
+		frame_20.Size = UDim2.new(0, 5, 0, 1)
+		frame_20.Parent = arrow_7
+
+		local frame_21 = Instance.new("Frame")
+		frame_21.Name = "Frame"
+		frame_21.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_21.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_21.Position = UDim2.new(0, 8, 0, 3)
+		frame_21.ZIndex = 10
+		frame_21.BorderSizePixel = 0
+		frame_21.Size = UDim2.new(0, 1, 0, 1)
+		frame_21.Parent = arrow_7
+
+		local down_4 = Instance.new("TextButton")
+		down_4.Name = "Down"
+		down_4.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down_4.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down_4.Text = ""
+		down_4.AutoButtonColor = false
+		down_4.BackgroundColor3 = Color3.new(1, 1, 1)
+		down_4.BorderSizePixel = 0
+		down_4.BackgroundTransparency = 1
+		down_4.Position = UDim2.new(0, 0, 0, 8)
+		down_4.ZIndex = 10
+		down_4.TextSize = 14
+		down_4.Size = UDim2.new(1, 0, 0, 8)
+		down_4.Parent = arrowFrame_4
+
+		local arrow_8 = Instance.new("Frame")
+		arrow_8.Name = "Arrow"
+		arrow_8.BackgroundTransparency = 1
+		arrow_8.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_8.ZIndex = 10
+		arrow_8.Size = UDim2.new(0, 16, 0, 8)
+		arrow_8.Parent = down_4
+
+		local frame_22 = Instance.new("Frame")
+		frame_22.Name = "Frame"
+		frame_22.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_22.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_22.Position = UDim2.new(0, 7, 0, 4)
+		frame_22.ZIndex = 10
+		frame_22.BorderSizePixel = 0
+		frame_22.Size = UDim2.new(0, 3, 0, 1)
+		frame_22.Parent = arrow_8
+
+		local frame_23 = Instance.new("Frame")
+		frame_23.Name = "Frame"
+		frame_23.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_23.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_23.Position = UDim2.new(0, 6, 0, 3)
+		frame_23.ZIndex = 10
+		frame_23.BorderSizePixel = 0
+		frame_23.Size = UDim2.new(0, 5, 0, 1)
+		frame_23.Parent = arrow_8
+
+		local frame_24 = Instance.new("Frame")
+		frame_24.Name = "Frame"
+		frame_24.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_24.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_24.Position = UDim2.new(0, 8, 0, 5)
+		frame_24.ZIndex = 10
+		frame_24.BorderSizePixel = 0
+		frame_24.Size = UDim2.new(0, 1, 0, 1)
+		frame_24.Parent = arrow_8
+
+		local green = Instance.new("Frame")
+		green.Name = "Green"
+		green.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		green.Position = UDim2.new(1, -63, 0, 233)
+		green.ZIndex = 10
+		green.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		green.Size = UDim2.new(0, 52, 0, 16)
+		green.Parent = content
+
+		local title_7 = Instance.new("TextLabel")
+		title_7.Name = "Title"
+		title_7.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_7.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_7.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_7.Text = "Green:"
+		title_7.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_7.Position = UDim2.new(0, -40, 0, 0)
+		title_7.BackgroundTransparency = 1
+		title_7.TextXAlignment = Enum.TextXAlignment.Right
+		title_7.ZIndex = 10
+		title_7.TextSize = 14
+		title_7.Size = UDim2.new(0, 34, 1, 0)
+		title_7.Parent = green
+
+		local greenInput = Instance.new("TextBox")
+		greenInput.Name = "Input"
+		greenInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		greenInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		greenInput.Text = "0"
+		greenInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		greenInput.Position = UDim2.new(0, 2, 0, 0)
+		greenInput.BackgroundTransparency = 1
+		greenInput.TextXAlignment = Enum.TextXAlignment.Left
+		greenInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		greenInput.ZIndex = 10
+		greenInput.TextSize = 14
+		greenInput.Size = UDim2.new(0, 50, 0, 16)
+		greenInput.Parent = green
+
+		local arrowFrame_5 = Instance.new("Frame")
+		arrowFrame_5.Name = "ArrowFrame"
+		arrowFrame_5.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_5.BackgroundTransparency = 1
+		arrowFrame_5.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame_5.ZIndex = 10
+		arrowFrame_5.BorderSizePixel = 0
+		arrowFrame_5.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame_5.Parent = greenInput
+
+		local down_5 = Instance.new("TextButton")
+		down_5.Name = "Down"
+		down_5.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down_5.Text = ""
+		down_5.AutoButtonColor = false
+		down_5.BackgroundColor3 = Color3.new(1, 1, 1)
+		down_5.BorderSizePixel = 0
+		down_5.BackgroundTransparency = 1
+		down_5.Position = UDim2.new(0, 0, 0, 8)
+		down_5.ZIndex = 10
+		down_5.TextSize = 14
+		down_5.Size = UDim2.new(1, 0, 0, 8)
+		down_5.Parent = arrowFrame_5
+
+		local arrow_9 = Instance.new("Frame")
+		arrow_9.Name = "Arrow"
+		arrow_9.BackgroundTransparency = 1
+		arrow_9.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_9.ZIndex = 10
+		arrow_9.Size = UDim2.new(0, 16, 0, 8)
+		arrow_9.Parent = down_5
+
+		local frame_25 = Instance.new("Frame")
+		frame_25.Name = "Frame"
+		frame_25.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_25.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_25.Position = UDim2.new(0, 8, 0, 5)
+		frame_25.ZIndex = 10
+		frame_25.BorderSizePixel = 0
+		frame_25.Size = UDim2.new(0, 1, 0, 1)
+		frame_25.Parent = arrow_9
+
+		local frame_26 = Instance.new("Frame")
+		frame_26.Name = "Frame"
+		frame_26.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_26.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_26.Position = UDim2.new(0, 7, 0, 4)
+		frame_26.ZIndex = 10
+		frame_26.BorderSizePixel = 0
+		frame_26.Size = UDim2.new(0, 3, 0, 1)
+		frame_26.Parent = arrow_9
+
+		local frame_27 = Instance.new("Frame")
+		frame_27.Name = "Frame"
+		frame_27.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_27.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_27.Position = UDim2.new(0, 6, 0, 3)
+		frame_27.ZIndex = 10
+		frame_27.BorderSizePixel = 0
+		frame_27.Size = UDim2.new(0, 5, 0, 1)
+		frame_27.Parent = arrow_9
+
+		local up_5 = Instance.new("TextButton")
+		up_5.Name = "Up"
+		up_5.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up_5.Text = ""
+		up_5.AutoButtonColor = false
+		up_5.BackgroundColor3 = Color3.new(1, 1, 1)
+		up_5.BackgroundTransparency = 1
+		up_5.BorderSizePixel = 0
+		up_5.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up_5.ZIndex = 10
+		up_5.TextSize = 14
+		up_5.Size = UDim2.new(1, 0, 0, 8)
+		up_5.Parent = arrowFrame_5
+
+		local arrow_10 = Instance.new("Frame")
+		arrow_10.Name = "Arrow"
+		arrow_10.BackgroundTransparency = 1
+		arrow_10.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_10.ZIndex = 10
+		arrow_10.Size = UDim2.new(0, 16, 0, 8)
+		arrow_10.Parent = up_5
+
+		local frame_28 = Instance.new("Frame")
+		frame_28.Name = "Frame"
+		frame_28.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_28.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_28.Position = UDim2.new(0, 7, 0, 4)
+		frame_28.ZIndex = 10
+		frame_28.BorderSizePixel = 0
+		frame_28.Size = UDim2.new(0, 3, 0, 1)
+		frame_28.Parent = arrow_10
+
+		local frame_29 = Instance.new("Frame")
+		frame_29.Name = "Frame"
+		frame_29.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_29.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_29.Position = UDim2.new(0, 8, 0, 3)
+		frame_29.ZIndex = 10
+		frame_29.BorderSizePixel = 0
+		frame_29.Size = UDim2.new(0, 1, 0, 1)
+		frame_29.Parent = arrow_10
+
+		local frame_30 = Instance.new("Frame")
+		frame_30.Name = "Frame"
+		frame_30.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_30.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_30.Position = UDim2.new(0, 6, 0, 5)
+		frame_30.ZIndex = 10
+		frame_30.BorderSizePixel = 0
+		frame_30.Size = UDim2.new(0, 5, 0, 1)
+		frame_30.Parent = arrow_10
+
+		local val = Instance.new("Frame")
+		val.Name = "Val"
+		val.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		val.Position = UDim2.new(1, -180, 0, 255)
+		val.ZIndex = 10
+		val.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		val.Size = UDim2.new(0, 52, 0, 16)
+		val.Parent = content
+
+		local valInput = Instance.new("TextBox")
+		valInput.Name = "Input"
+		valInput.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		valInput.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		valInput.Text = "255"
+		valInput.BackgroundColor3 = Color3.new(0.251, 0.251, 0.251)
+		valInput.Position = UDim2.new(0, 2, 0, 0)
+		valInput.BackgroundTransparency = 1
+		valInput.TextXAlignment = Enum.TextXAlignment.Left
+		valInput.BorderColor3 = Color3.new(0.376, 0.376, 0.376)
+		valInput.ZIndex = 10
+		valInput.TextSize = 14
+		valInput.Size = UDim2.new(0, 50, 0, 16)
+		valInput.Parent = val
+
+		local arrowFrame_6 = Instance.new("Frame")
+		arrowFrame_6.Name = "ArrowFrame"
+		arrowFrame_6.BackgroundColor3 = Color3.new(1, 1, 1)
+		arrowFrame_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_6.BackgroundTransparency = 1
+		arrowFrame_6.Position = UDim2.new(1, -16, 0, 0)
+		arrowFrame_6.ZIndex = 10
+		arrowFrame_6.BorderSizePixel = 0
+		arrowFrame_6.Size = UDim2.new(0, 16, 1, 0)
+		arrowFrame_6.Parent = valInput
+
+		local up_6 = Instance.new("TextButton")
+		up_6.Name = "Up"
+		up_6.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		up_6.Text = ""
+		up_6.AutoButtonColor = false
+		up_6.BackgroundColor3 = Color3.new(1, 1, 1)
+		up_6.BackgroundTransparency = 1
+		up_6.BorderSizePixel = 0
+		up_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		up_6.ZIndex = 10
+		up_6.TextSize = 14
+		up_6.Size = UDim2.new(1, 0, 0, 8)
+		up_6.Parent = arrowFrame_6
+
+		local arrow_11 = Instance.new("Frame")
+		arrow_11.Name = "Arrow"
+		arrow_11.BackgroundTransparency = 1
+		arrow_11.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_11.ZIndex = 10
+		arrow_11.Size = UDim2.new(0, 16, 0, 8)
+		arrow_11.Parent = up_6
+
+		local frame_31 = Instance.new("Frame")
+		frame_31.Name = "Frame"
+		frame_31.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_31.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_31.Position = UDim2.new(0, 7, 0, 4)
+		frame_31.ZIndex = 10
+		frame_31.BorderSizePixel = 0
+		frame_31.Size = UDim2.new(0, 3, 0, 1)
+		frame_31.Parent = arrow_11
+
+		local frame_32 = Instance.new("Frame")
+		frame_32.Name = "Frame"
+		frame_32.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_32.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_32.Position = UDim2.new(0, 8, 0, 3)
+		frame_32.ZIndex = 10
+		frame_32.BorderSizePixel = 0
+		frame_32.Size = UDim2.new(0, 1, 0, 1)
+		frame_32.Parent = arrow_11
+
+		local frame_33 = Instance.new("Frame")
+		frame_33.Name = "Frame"
+		frame_33.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_33.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_33.Position = UDim2.new(0, 6, 0, 5)
+		frame_33.ZIndex = 10
+		frame_33.BorderSizePixel = 0
+		frame_33.Size = UDim2.new(0, 5, 0, 1)
+		frame_33.Parent = arrow_11
+
+		local down_6 = Instance.new("TextButton")
+		down_6.Name = "Down"
+		down_6.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		down_6.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		down_6.Text = ""
+		down_6.AutoButtonColor = false
+		down_6.BackgroundColor3 = Color3.new(1, 1, 1)
+		down_6.BorderSizePixel = 0
+		down_6.BackgroundTransparency = 1
+		down_6.Position = UDim2.new(0, 0, 0, 8)
+		down_6.ZIndex = 10
+		down_6.TextSize = 14
+		down_6.Size = UDim2.new(1, 0, 0, 8)
+		down_6.Parent = arrowFrame_6
+
+		local arrow_12 = Instance.new("Frame")
+		arrow_12.Name = "Arrow"
+		arrow_12.BackgroundTransparency = 1
+		arrow_12.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_12.ZIndex = 10
+		arrow_12.Size = UDim2.new(0, 16, 0, 8)
+		arrow_12.Parent = down_6
+
+		local frame_34 = Instance.new("Frame")
+		frame_34.Name = "Frame"
+		frame_34.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_34.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_34.Position = UDim2.new(0, 8, 0, 5)
+		frame_34.ZIndex = 10
+		frame_34.BorderSizePixel = 0
+		frame_34.Size = UDim2.new(0, 1, 0, 1)
+		frame_34.Parent = arrow_12
+
+		local frame_35 = Instance.new("Frame")
+		frame_35.Name = "Frame"
+		frame_35.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_35.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_35.Position = UDim2.new(0, 7, 0, 4)
+		frame_35.ZIndex = 10
+		frame_35.BorderSizePixel = 0
+		frame_35.Size = UDim2.new(0, 3, 0, 1)
+		frame_35.Parent = arrow_12
+
+		local frame_36 = Instance.new("Frame")
+		frame_36.Name = "Frame"
+		frame_36.BackgroundColor3 = Color3.new(0.863, 0.863, 0.863)
+		frame_36.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_36.Position = UDim2.new(0, 6, 0, 3)
+		frame_36.ZIndex = 10
+		frame_36.BorderSizePixel = 0
+		frame_36.Size = UDim2.new(0, 5, 0, 1)
+		frame_36.Parent = arrow_12
+
+		local title_8 = Instance.new("TextLabel")
+		title_8.Name = "Title"
+		title_8.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		title_8.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		title_8.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		title_8.Text = "Val:"
+		title_8.BackgroundColor3 = Color3.new(1, 1, 1)
+		title_8.Position = UDim2.new(0, -40, 0, 0)
+		title_8.BackgroundTransparency = 1
+		title_8.TextXAlignment = Enum.TextXAlignment.Right
+		title_8.ZIndex = 10
+		title_8.TextSize = 14
+		title_8.Size = UDim2.new(0, 34, 1, 0)
+		title_8.Parent = val
+
+		local arrowFrame_7 = Instance.new("Frame")
+		arrowFrame_7.Name = "ArrowFrame"
+		arrowFrame_7.BackgroundColor3 = Color3.new(0.141, 0.141, 0.145)
+		arrowFrame_7.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrowFrame_7.Position = UDim2.new(1, -16, 0, 1)
+		arrowFrame_7.ZIndex = 10
+		arrowFrame_7.BorderSizePixel = 0
+		arrowFrame_7.Size = UDim2.new(0, 5, 0, 208)
+		arrowFrame_7.Parent = content
+
+		local arrow_13 = Instance.new("Frame")
+		arrow_13.Name = "Arrow"
+		arrow_13.BackgroundTransparency = 1
+		arrow_13.Position = UDim2.new(0, -2, 0, -4)
+		arrow_13.ZIndex = 10
+		arrow_13.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		arrow_13.Size = UDim2.new(0, 8, 0, 16)
+		arrow_13.Parent = arrowFrame_7
+
+		local frame_37 = Instance.new("Frame")
+		frame_37.Name = "Frame"
+		frame_37.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame_37.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_37.Position = UDim2.new(0, 2, 0, 8)
+		frame_37.ZIndex = 10
+		frame_37.BorderSizePixel = 0
+		frame_37.Size = UDim2.new(0, 1, 0, 1)
+		frame_37.Parent = arrow_13
+
+		local frame_38 = Instance.new("Frame")
+		frame_38.Name = "Frame"
+		frame_38.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame_38.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_38.Position = UDim2.new(0, 6, 0, 4)
+		frame_38.ZIndex = 10
+		frame_38.BorderSizePixel = 0
+		frame_38.Size = UDim2.new(0, 1, 0, 9)
+		frame_38.Parent = arrow_13
+
+		local frame_39 = Instance.new("Frame")
+		frame_39.Name = "Frame"
+		frame_39.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame_39.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_39.Position = UDim2.new(0, 3, 0, 7)
+		frame_39.ZIndex = 10
+		frame_39.BorderSizePixel = 0
+		frame_39.Size = UDim2.new(0, 1, 0, 3)
+		frame_39.Parent = arrow_13
+
+		local frame_40 = Instance.new("Frame")
+		frame_40.Name = "Frame"
+		frame_40.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame_40.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_40.Position = UDim2.new(0, 5, 0, 5)
+		frame_40.ZIndex = 10
+		frame_40.BorderSizePixel = 0
+		frame_40.Size = UDim2.new(0, 1, 0, 7)
+		frame_40.Parent = arrow_13
+
+		local frame_41 = Instance.new("Frame")
+		frame_41.Name = "Frame"
+		frame_41.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame_41.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		frame_41.Position = UDim2.new(0, 4, 0, 6)
+		frame_41.ZIndex = 10
+		frame_41.BorderSizePixel = 0
+		frame_41.Size = UDim2.new(0, 1, 0, 5)
+		frame_41.Parent = arrow_13
+
+		local topBar = Instance.new("Frame")
+		topBar.Name = "TopBar"
+		topBar.BackgroundColor3 = Color3.new(0.18, 0.18, 0.184)
+		topBar.BorderColor3 = Color3.new()
+		topBar.Position = UDim2.new(0.00222, 0, 0, 0)
+		topBar.ZIndex = 10
+		topBar.BorderSizePixel = 0
+		topBar.Size = UDim2.new(0.996, 0, 0, 20)
+		topBar.Parent = colorPicker
+
+		local windowTitle = Instance.new("TextLabel")
+		windowTitle.Name = "WindowTitle"
+		windowTitle.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		windowTitle.TextColor3 = Color3.new(0.863, 0.863, 0.863)
+		windowTitle.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		windowTitle.Text = "Color Picker"
+		windowTitle.BackgroundColor3 = Color3.new(1, 1, 1)
+		windowTitle.BackgroundTransparency = 1
+		windowTitle.Position = UDim2.new(0, 23, 0, 0)
+		windowTitle.ZIndex = 10
+		windowTitle.TextSize = 14
+		windowTitle.Size = UDim2.new(1, -50, 0, 20)
+		windowTitle.Parent = topBar
+
+		local exit = Instance.new("TextButton")
+		exit.Name = "Exit"
+		exit.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
+		exit.TextColor3 = Color3.new(1, 1, 1)
+		exit.Text = ""
+		exit.BackgroundColor3 = Color3.new(1, 1, 1)
+		exit.BackgroundTransparency = 1
+		exit.Position = UDim2.new(1, -20, 0, 0)
+		exit.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		exit.ZIndex = 10
+		exit.TextSize = 14
+		exit.Size = UDim2.new(0, 20, 0, 20)
+		exit.Parent = topBar
+
+		local imageLabel = Instance.new("ImageLabel")
+		imageLabel.Name = "ImageLabel"
+		imageLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+		imageLabel.BackgroundTransparency = 1
+		imageLabel.Position = UDim2.new(0, 5, 0, 5)
+		imageLabel.ImageContent = Content.fromAssetId(5054663650)
+		imageLabel.ZIndex = 10
+		imageLabel.BorderColor3 = Color3.new(0.106, 0.165, 0.208)
+		imageLabel.Size = UDim2.new(0, 10, 0, 10)
+		imageLabel.Parent = exit
+
 		picker.Parent = ScaledHolder
 
 		local ColorPicker do
@@ -3375,56 +4694,76 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 			ColorPicker.new = function()
 				local newMt = setmetatable({},{})
-
-				local pickerGui = picker.ColorPicker
-				local pickerTopBar = pickerGui.TopBar
-				local pickerExit = pickerTopBar.Exit
-				local pickerFrame = pickerGui.Content
-				local colorSpace = pickerFrame.ColorSpaceFrame.ColorSpace
-				local colorStrip = pickerFrame.ColorStrip
-				local previewFrame = pickerFrame.Preview
-				local basicColorsFrame = pickerFrame.BasicColors
-				local customColorsFrame = pickerFrame.CustomColors
-				local defaultButton = pickerFrame.Default
-				local cancelButton = pickerFrame.Cancel
-				local shade1Button = pickerFrame.Shade1
-				local shade2Button = pickerFrame.Shade2
-				local shade3Button = pickerFrame.Shade3
-				local text1Button = pickerFrame.Text1
-				local text2Button = pickerFrame.Text2
-				local scrollButton = pickerFrame.Scroll
-
-				local colorScope = colorSpace.Scope
-				local colorArrow = pickerFrame.ArrowFrame.Arrow
-
-				local hueInput = pickerFrame.Hue.Input
-				local satInput = pickerFrame.Sat.Input
-				local valInput = pickerFrame.Val.Input
-
-				local redInput = pickerFrame.Red.Input
-				local greenInput = pickerFrame.Green.Input
-				local blueInput = pickerFrame.Blue.Input
-
 				local mouse = IYMouse
 
-				local hue,sat,val = 0,0,1
-				local red,green,blue = 1,1,1
+				local hue, sat, val = 0,0,1
+				local red, green, blue = 1,1,1
 				local chosenColor = Color3.new(0,0,0)
 
-				local basicColors = {Color3.new(0,0,0),Color3.new(0.66666668653488,0,0),Color3.new(0,0.33333334326744,0),Color3.new(0.66666668653488,0.33333334326744,0),Color3.new(0,0.66666668653488,0),Color3.new(0.66666668653488,0.66666668653488,0),Color3.new(0,1,0),Color3.new(0.66666668653488,1,0),Color3.new(0,0,0.49803924560547),Color3.new(0.66666668653488,0,0.49803924560547),Color3.new(0,0.33333334326744,0.49803924560547),Color3.new(0.66666668653488,0.33333334326744,0.49803924560547),Color3.new(0,0.66666668653488,0.49803924560547),Color3.new(0.66666668653488,0.66666668653488,0.49803924560547),Color3.new(0,1,0.49803924560547),Color3.new(0.66666668653488,1,0.49803924560547),Color3.new(0,0,1),Color3.new(0.66666668653488,0,1),Color3.new(0,0.33333334326744,1),Color3.new(0.66666668653488,0.33333334326744,1),Color3.new(0,0.66666668653488,1),Color3.new(0.66666668653488,0.66666668653488,1),Color3.new(0,1,1),Color3.new(0.66666668653488,1,1),Color3.new(0.33333334326744,0,0),Color3.new(1,0,0),Color3.new(0.33333334326744,0.33333334326744,0),Color3.new(1,0.33333334326744,0),Color3.new(0.33333334326744,0.66666668653488,0),Color3.new(1,0.66666668653488,0),Color3.new(0.33333334326744,1,0),Color3.new(1,1,0),Color3.new(0.33333334326744,0,0.49803924560547),Color3.new(1,0,0.49803924560547),Color3.new(0.33333334326744,0.33333334326744,0.49803924560547),Color3.new(1,0.33333334326744,0.49803924560547),Color3.new(0.33333334326744,0.66666668653488,0.49803924560547),Color3.new(1,0.66666668653488,0.49803924560547),Color3.new(0.33333334326744,1,0.49803924560547),Color3.new(1,1,0.49803924560547),Color3.new(0.33333334326744,0,1),Color3.new(1,0,1),Color3.new(0.33333334326744,0.33333334326744,1),Color3.new(1,0.33333334326744,1),Color3.new(0.33333334326744,0.66666668653488,1),Color3.new(1,0.66666668653488,1),Color3.new(0.33333334326744,1,1),Color3.new(1,1,1)}
-				local customColors = {}
+				local basicColorsList = {
+					Color3.fromRGB(0, 0, 0),
+					Color3.fromRGB(170, 0, 0),
+					Color3.fromRGB(0, 85, 0),
+					Color3.fromRGB(170, 85, 0),
+					Color3.fromRGB(0, 170, 0),
+					Color3.fromRGB(170, 170, 0),
+					Color3.fromRGB(0, 255, 0),
+					Color3.fromRGB(170, 255, 0),
+					Color3.fromRGB(0, 0, 127),
+					Color3.fromRGB(170, 0, 127),
+					Color3.fromRGB(0, 85, 127),
+					Color3.fromRGB(170, 85, 127),
+					Color3.fromRGB(0, 170, 127),
+					Color3.fromRGB(170, 170, 127),
+					Color3.fromRGB(0, 255, 127),
+					Color3.fromRGB(170, 255, 127),
+					Color3.fromRGB(0, 0, 255),
+					Color3.fromRGB(170, 0, 255),
+					Color3.fromRGB(0, 85, 255),
+					Color3.fromRGB(170, 85, 255),
+					Color3.fromRGB(0, 170, 255),
+					Color3.fromRGB(170, 170, 255),
+					Color3.fromRGB(0, 255, 255),
+					Color3.fromRGB(170, 255, 255),
+					Color3.fromRGB(85, 0, 0),
+					Color3.fromRGB(255, 0, 0),
+					Color3.fromRGB(85, 85, 0),
+					Color3.fromRGB(255, 85, 0),
+					Color3.fromRGB(85, 170, 0),
+					Color3.fromRGB(255, 170, 0),
+					Color3.fromRGB(85, 255, 0),
+					Color3.fromRGB(255, 255, 0),
+					Color3.fromRGB(85, 0, 127),
+					Color3.fromRGB(255, 0, 127),
+					Color3.fromRGB(85, 85, 127),
+					Color3.fromRGB(255, 85, 127),
+					Color3.fromRGB(85, 170, 127),
+					Color3.fromRGB(255, 170, 127),
+					Color3.fromRGB(85, 255, 127),
+					Color3.fromRGB(255, 255, 127),
+					Color3.fromRGB(85, 0, 255),
+					Color3.fromRGB(255, 0, 255),
+					Color3.fromRGB(85, 85, 255),
+					Color3.fromRGB(255, 85, 255),
+					Color3.fromRGB(85, 170, 255),
+					Color3.fromRGB(255, 170, 255),
+					Color3.fromRGB(85, 255, 255),
+					Color3.fromRGB(255, 255, 255)
+				}				
+
+				local customColorsList = {}
 
 				dragGUI(picker)
 
 				local function updateColor(noupdate)
-					local relativeX,relativeY,relativeStripY = 219 - hue*219, 199 - sat*199, 199 - val*199
-					local hsvColor = Color3.fromHSV(hue,sat,val)
+					local relativeX, relativeY, relativeStripY = 219 - hue * 219, 199 - sat * 199, 199 - val * 199
 
 					if noupdate == 2 or not noupdate then
 						hueInput.Text = tostring(math.ceil(359*hue))
 						satInput.Text = tostring(math.ceil(255*sat))
 						valInput.Text = tostring(math.floor(255*val))
 					end
+
 					if noupdate == 1 or not noupdate then
 						redInput.Text = tostring(math.floor(255*red))
 						greenInput.Text = tostring(math.floor(255*green))
@@ -3436,10 +4775,12 @@ ColorsButton.MouseButton1Click:Connect(function()
 					colorScope.Position = UDim2.new(0,relativeX-9,0,relativeY-9)
 					colorStrip.ImageColor3 = Color3.fromHSV(hue,sat,1)
 					colorArrow.Position = UDim2.new(0,-2,0,relativeStripY-4)
-					previewFrame.BackgroundColor3 = chosenColor
+					preview.BackgroundColor3 = chosenColor
 
 					newMt.Color = chosenColor
-					if newMt.Changed then newMt:Changed(chosenColor) end
+					if newMt.Changed then 
+						newMt:Changed(chosenColor) 
+					end
 				end
 
 				local function colorSpaceInput()
@@ -3452,8 +4793,8 @@ ColorsButton.MouseButton1Click:Connect(function()
 					hue = (219 - relativeX)/219
 					sat = (199 - relativeY)/199
 
-					local hsvColor = Color3.fromHSV(hue,sat,val)
-					red,green,blue = hsvColor.r,hsvColor.g,hsvColor.b
+					local hsvColor = Color3.fromHSV(hue, sat, val)
+					red, green, blue = hsvColor.R, hsvColor.G, hsvColor.B
 
 					updateColor()
 				end
@@ -3667,19 +5008,20 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 				local row = 0
 				local column = 0
-				for i,v in pairs(basicColors) do
+				
+				for i, v in pairs(basicColorsList) do
 					local newColor = colorChoice:Clone()
 					newColor.BackgroundColor3 = v
-					newColor.Position = UDim2.new(0,1 + 30*column,0,21 + 23*row)
+					newColor.Position = UDim2.fromOffset(1 + 30 * column, 21 + 23 * row)
 
 					newColor.MouseButton1Click:Connect(function()
-						red,green,blue = v.r,v.g,v.b
-						local newColor = Color3.new(red,green,blue)
-						hue,sat,val = Color3.toHSV(newColor)
+						red, green, blue = v.R, v.G, v.B
+						local newColor = Color3.new(red, green, blue)
+						hue, sat, val = newColor:ToHSV()
 						updateColor()
 					end)	
 
-					newColor.Parent = basicColorsFrame
+					newColor.Parent = basicColors
 					column = column + 1
 					if column == 6 then row = row + 1 column = 0 end
 				end
@@ -3687,24 +5029,24 @@ ColorsButton.MouseButton1Click:Connect(function()
 				row = 0
 				column = 0
 				for i = 1,12 do
-					local color = customColors[i] or Color3.new(0,0,0)
+					local color = customColorsList[i] or Color3.new(0,0,0)
 					local newColor = colorChoice:Clone()
 					newColor.BackgroundColor3 = color
 					newColor.Position = UDim2.new(0,1 + 30*column,0,20 + 23*row)
 
 					newColor.MouseButton1Click:Connect(function()
-						local curColor = customColors[i] or Color3.new(0,0,0)
+						local curColor = customColorsList[i] or Color3.new(0,0,0)
 						red,green,blue = curColor.r,curColor.g,curColor.b
-						hue,sat,val = Color3.toHSV(curColor)
+						hue,sat,val = curColor:ToHSV()
 						updateColor()
 					end)
 
 					newColor.MouseButton2Click:Connect(function()
-						customColors[i] = chosenColor
+						customColorsList[i] = chosenColor
 						newColor.BackgroundColor3 = chosenColor
 					end)
 
-					newColor.Parent = customColorsFrame
+					newColor.Parent = customColors
 					column = column + 1
 					if column == 6 then row = row + 1 column = 0 end
 				end
@@ -3717,39 +5059,39 @@ ColorsButton.MouseButton1Click:Connect(function()
 				shade2Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0.4 end end)
 				shade2Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0 end end)
 
-				shade3Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,shade3) end end)
+				shade3Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, shade3) end end)
 				shade3Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0.4 end end)
 				shade3Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0 end end)
 
-				text1Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,text1) end end)
+				text1Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, text1) end end)
 				text1Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0.4 end end)
 				text1Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0 end end)
 
-				text2Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,text2) end end)
+				text2Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, text2) end end)
 				text2Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0.4 end end)
 				text2Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0 end end)
 
-				scrollButton.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,scroll) end end)
+				scrollButton.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, scroll) end end)
 				scrollButton.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0.4 end end)
 				scrollButton.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0 end end)
 
-				cancelButton.MouseButton1Click:Connect(function() if newMt.Cancel then newMt:Cancel() end end)
-				cancelButton.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancelButton.BackgroundTransparency = 0.4 end end)
-				cancelButton.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancelButton.BackgroundTransparency = 0 end end)
+				cancel.MouseButton1Click:Connect(function() if newMt.Cancel then newMt:Cancel() end end)
+				cancel.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0.4 end end)
+				cancel.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0 end end)
 
-				defaultButton.MouseButton1Click:Connect(function() if newMt.Default then newMt:Default() end end)
-				defaultButton.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then defaultButton.BackgroundTransparency = 0.4 end end)
-				defaultButton.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then defaultButton.BackgroundTransparency = 0 end end)
+				default.MouseButton1Click:Connect(function() if newMt.Default then newMt:Default() end end)
+				default.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0.4 end end)
+				default.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0 end end)
 
-				pickerExit.MouseButton1Click:Connect(function()
+				exit.MouseButton1Click:Connect(function()
 					picker:TweenPosition(UDim2.new(0.5, -219, 0, -500), "InOut", "Quart", 0.5, true, nil)
 				end)
 
 				updateColor()
 
-				newMt.SetColor = function(self,color)
-					red,green,blue = color.r,color.g,color.b
-					hue,sat,val = Color3.toHSV(color)
+				function newMt.SetColor(self, color)
+					red, green, blue = color.R, color.G, color.B
+					hue, sat, val = color:ToHSV()
 					updateColor()
 				end
 
@@ -3760,7 +5102,13 @@ ColorsButton.MouseButton1Click:Connect(function()
 		picker:TweenPosition(UDim2.new(0.5, -219, 0, 100), "InOut", "Quart", 0.5, true, nil)
 
 		local Npicker = ColorPicker.new()
-		Npicker.Confirm = function(self,color,ctype) updateColors(color,ctype) wait() updatesaves() end
+		
+		Npicker.Confirm = function(self, color, ctype)
+			updateColors(color, ctype)
+			wait()
+			updatesaves()
+		end
+		
 		Npicker.Cancel = function(self)
 			updateColors(cache_currentShade1,shade1)
 			updateColors(cache_currentShade2,shade2)
@@ -4482,10 +5830,10 @@ function GetInTable(Table, Name)
 end
 
 function respawn(plr)
-    if invisRunning then 
-        TurnVisible() 
-    end
-    local char = plr.Character
+	if invisRunning then 
+		TurnVisible() 
+	end
+	local char = plr.Character
 	if typeof(char) == 'Instance' then
 		local humanoid = char:FindFirstChildOfClass("Humanoid")
 		if humanoid then 
@@ -4508,16 +5856,16 @@ end
 local refreshCmd = false
 
 function refresh(plr)
-    refreshCmd = true
-    local Human = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid", true)
-    local pos = Human and Human.RootPart and Human.RootPart.CFrame
-    local pos1 = workspace.CurrentCamera.CFrame
-    respawn(plr)
-    task.spawn(function()
-        plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, 
-        workspace.CurrentCamera.CFrame = pos, wait() and pos1
-        refreshCmd = false
-    end)
+	refreshCmd = true
+	local Human = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid", true)
+	local pos = Human and Human.RootPart and Human.RootPart.CFrame
+	local pos1 = workspace.CurrentCamera.CFrame
+	respawn(plr)
+	task.spawn(function()
+		plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, 
+		workspace.CurrentCamera.CFrame = pos, wait() and pos1
+		refreshCmd = false
+	end)
 end
 
 local lastDeath
@@ -6115,7 +7463,7 @@ commands:new('serverinfo', {
 			local CopyPlrID = Instance.new("TextButton")
 			local CopyPlcID = Instance.new("TextButton")
 			local CopyPlcName = Instance.new("TextButton")
-	
+
 			FRAME.Name = randomString()
 			FRAME.Parent = ScaledHolder
 			FRAME.Active = true
@@ -6124,7 +7472,7 @@ commands:new('serverinfo', {
 			FRAME.Size = UDim2.new(0, 250, 0, 20)
 			FRAME.ZIndex = 10
 			dragGUI(FRAME)
-	
+
 			shadow.Name = "shadow"
 			shadow.Parent = FRAME
 			shadow.BackgroundColor3 = currentShade2
@@ -6132,7 +7480,7 @@ commands:new('serverinfo', {
 			shadow.Size = UDim2.new(0, 250, 0, 20)
 			shadow.ZIndex = 10
 			table.insert(shade2,shadow)
-	
+
 			PopupText.Name = "PopupText"
 			PopupText.Parent = shadow
 			PopupText.BackgroundTransparency = 1
@@ -6144,7 +7492,7 @@ commands:new('serverinfo', {
 			PopupText.TextColor3 = currentText1
 			PopupText.TextWrapped = true
 			table.insert(text1,PopupText)
-	
+
 			Exit.Name = "Exit"
 			Exit.Parent = shadow
 			Exit.BackgroundTransparency = 1
@@ -6152,7 +7500,7 @@ commands:new('serverinfo', {
 			Exit.Size = UDim2.new(0, 20, 0, 20)
 			Exit.Text = ""
 			Exit.ZIndex = 10
-	
+
 			ExitImage.Parent = Exit
 			ExitImage.BackgroundColor3 = Color3.new(1, 1, 1)
 			ExitImage.BackgroundTransparency = 1
@@ -6160,7 +7508,7 @@ commands:new('serverinfo', {
 			ExitImage.Size = UDim2.new(0, 10, 0, 10)
 			ExitImage.Image = "rbxassetid://5054663650"
 			ExitImage.ZIndex = 10
-	
+
 			background.Name = "background"
 			background.Parent = FRAME
 			background.Active = true
@@ -6170,7 +7518,7 @@ commands:new('serverinfo', {
 			background.Size = UDim2.new(0, 250, 0, 250)
 			background.ZIndex = 10
 			table.insert(shade1,background)
-	
+
 			TextLabel.Name = "Text Label"
 			TextLabel.Parent = background
 			TextLabel.BackgroundTransparency = 1
@@ -6184,7 +7532,7 @@ commands:new('serverinfo', {
 			TextLabel.TextColor3 = currentText1
 			TextLabel.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,TextLabel)
-	
+
 			TextLabel2.Name = "Text Label2"
 			TextLabel2.Parent = background
 			TextLabel2.BackgroundTransparency = 1
@@ -6198,7 +7546,7 @@ commands:new('serverinfo', {
 			TextLabel2.TextColor3 = currentText1
 			TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,TextLabel2)
-	
+
 			TextLabel3.Name = "Text Label3"
 			TextLabel3.Parent = background
 			TextLabel3.BackgroundTransparency = 1
@@ -6212,7 +7560,7 @@ commands:new('serverinfo', {
 			TextLabel3.TextColor3 = currentText1
 			TextLabel3.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,TextLabel3)
-	
+
 			Time.Name = "Time"
 			Time.Parent = background
 			Time.BackgroundTransparency = 1
@@ -6226,7 +7574,7 @@ commands:new('serverinfo', {
 			Time.TextColor3 = currentText1
 			Time.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,Time)
-	
+
 			appearance.Name = "appearance"
 			appearance.Parent = background
 			appearance.BackgroundTransparency = 1
@@ -6240,7 +7588,7 @@ commands:new('serverinfo', {
 			appearance.TextColor3 = currentText1
 			appearance.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,appearance)
-	
+
 			maxplayers.Name = "maxplayers"
 			maxplayers.Parent = background
 			maxplayers.BackgroundTransparency = 1
@@ -6254,7 +7602,7 @@ commands:new('serverinfo', {
 			maxplayers.TextColor3 = currentText1
 			maxplayers.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,maxplayers)
-	
+
 			name.Name = "name"
 			name.Parent = background
 			name.BackgroundTransparency = 1
@@ -6270,7 +7618,7 @@ commands:new('serverinfo', {
 			name.TextXAlignment = Enum.TextXAlignment.Left
 			name.TextYAlignment = Enum.TextYAlignment.Top
 			table.insert(text1,name)
-	
+
 			placeid.Name = "placeid"
 			placeid.Parent = background
 			placeid.BackgroundTransparency = 1
@@ -6284,7 +7632,7 @@ commands:new('serverinfo', {
 			placeid.TextColor3 = currentText1
 			placeid.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,placeid)
-	
+
 			playerid.Name = "playerid"
 			playerid.Parent = background
 			playerid.BackgroundTransparency = 1
@@ -6298,7 +7646,7 @@ commands:new('serverinfo', {
 			playerid.TextColor3 = currentText1
 			playerid.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,playerid)
-	
+
 			players.Name = "players"
 			players.Parent = background
 			players.BackgroundTransparency = 1
@@ -6312,7 +7660,7 @@ commands:new('serverinfo', {
 			players.TextColor3 = currentText1
 			players.TextXAlignment = Enum.TextXAlignment.Left
 			table.insert(text1,players)
-	
+
 			CopyApp.Name = "CopyApp"
 			CopyApp.Parent = background
 			CopyApp.BackgroundColor3 = currentShade2
@@ -6326,7 +7674,7 @@ commands:new('serverinfo', {
 			CopyApp.ZIndex = 10
 			table.insert(shade2,CopyApp)
 			table.insert(text1,CopyApp)
-	
+
 			CopyPlrID.Name = "CopyPlrID"
 			CopyPlrID.Parent = background
 			CopyPlrID.BackgroundColor3 = currentShade2
@@ -6340,7 +7688,7 @@ commands:new('serverinfo', {
 			CopyPlrID.ZIndex = 10
 			table.insert(shade2,CopyPlrID)
 			table.insert(text1,CopyPlrID)
-	
+
 			CopyPlcID.Name = "CopyPlcID"
 			CopyPlcID.Parent = background
 			CopyPlcID.BackgroundColor3 = currentShade2
@@ -6354,7 +7702,7 @@ commands:new('serverinfo', {
 			CopyPlcID.ZIndex = 10
 			table.insert(shade2,CopyPlcID)
 			table.insert(text1,CopyPlcID)
-	
+
 			CopyPlcName.Name = "CopyPlcName"
 			CopyPlcName.Parent = background
 			CopyPlcName.BackgroundColor3 = currentShade2
@@ -6368,7 +7716,7 @@ commands:new('serverinfo', {
 			CopyPlcName.ZIndex = 10
 			table.insert(shade2,CopyPlcName)
 			table.insert(text1,CopyPlcName)
-	
+
 			local SINFOGUI = background
 			FRAME:TweenPosition(UDim2.new(0.5, -130, 0, 100), "InOut", "Quart", 0.5, true, nil) 
 			wait(0.5)
@@ -6383,7 +7731,7 @@ commands:new('serverinfo', {
 			SINFOGUI.playerid.Text = "Player ID: " ..speaker.UserId
 			SINFOGUI.maxplayers.Text = Players.MaxPlayers.. " Players Max"
 			SINFOGUI.placeid.Text = "Place ID: " ..PlaceId
-	
+
 			CopyApp.MouseButton1Click:Connect(function()
 				toClipboard(speaker.CharacterAppearanceId)
 			end)
@@ -6396,7 +7744,7 @@ commands:new('serverinfo', {
 			CopyPlcName.MouseButton1Click:Connect(function()
 				toClipboard(Asset.Name)
 			end)
-	
+
 			repeat
 				players = Players:GetPlayers()
 				SINFOGUI.players.Text = #players.. " Player(s)"
@@ -7636,7 +8984,7 @@ commands:new('clientantikick', {
 		if not hookmetamethod then 
 			return notify('Incompatible Exploit', 'Your exploit does not support this command (missing hookmetamethod)')
 		end
-		
+
 		local LocalPlayer = Players.LocalPlayer
 		local oldhmmi, oldhmmnc
 
@@ -7670,10 +9018,10 @@ commands:new('clientantiteleport', {
 		if not hookmetamethod then 
 			return notify('Incompatible Exploit', 'Your exploit does not support this command (missing hookmetamethod)')
 		end
-		
+
 		local TeleportService = TeleportService
 		local oldhmmi, oldhmmnc
-		
+
 		oldhmmi = hookmetamethod(game, "__index", function(self, method)
 			if self == TeleportService then
 				if method:lower() == "teleport" then
@@ -7684,7 +9032,7 @@ commands:new('clientantiteleport', {
 			end
 			return oldhmmi(self, method)
 		end)
-		
+
 		oldhmmnc = hookmetamethod(game, "__namecall", function(self, ...)
 			if self == TeleportService and (getnamecallmethod():lower() == "teleport" or getnamecallmethod() == "TeleportToPlaceInstance") then
 				return
@@ -8355,273 +9703,273 @@ function StopFreecam()
 end
 
 commands:new("freecam", {
-    usage = "freecam",
-    aliases = {"fc"},
-    description = "Activates freecam mode",
-    callback = function(args, speaker)
-        StartFreecam()
-    end
+	usage = "freecam",
+	aliases = {"fc"},
+	description = "Activates freecam mode",
+	callback = function(args, speaker)
+		StartFreecam()
+	end
 })
 
 commands:new("freecampos", {
-    usage = "freecampos [x] [y] [z]",
-    aliases = {"fcpos", "fcp", "freecamposition", "fcposition"},
-    description = "Activates freecam mode at a specified position",
-    callback = function(args, speaker)
-        if not args[1] then return end
-        local freecamPos = CFrame.new(args[1], args[2], args[3])
-        StartFreecam(freecamPos)
-    end
+	usage = "freecampos [x] [y] [z]",
+	aliases = {"fcpos", "fcp", "freecamposition", "fcposition"},
+	description = "Activates freecam mode at a specified position",
+	callback = function(args, speaker)
+		if not args[1] then return end
+		local freecamPos = CFrame.new(args[1], args[2], args[3])
+		StartFreecam(freecamPos)
+	end
 })
 
 commands:new("freecamwaypoint", {
-    usage = "freecamwaypoint [waypoint_name]",
-    aliases = {"fcwp"},
-    description = "Activates freecam mode at a specified waypoint",
-    callback = function(args, speaker)
-        local WPName = tostring(getstring(1))
-        if speaker.Character then
-            for i, _ in pairs(WayPoints) do
-                local x = WayPoints[i].COORD[1]
-                local y = WayPoints[i].COORD[2]
-                local z = WayPoints[i].COORD[3]
-                if tostring(WayPoints[i].NAME):lower() == tostring(WPName):lower() then
-                    StartFreecam(CFrame.new(x, y, z))
-                end
-            end
-            for i, _ in pairs(pWayPoints) do
-                if tostring(pWayPoints[i].NAME):lower() == tostring(WPName):lower() then
-                    StartFreecam(CFrame.new(pWayPoints[i].COORD[1].Position))
-                end
-            end
-        end
-    end
+	usage = "freecamwaypoint [waypoint_name]",
+	aliases = {"fcwp"},
+	description = "Activates freecam mode at a specified waypoint",
+	callback = function(args, speaker)
+		local WPName = tostring(getstring(1))
+		if speaker.Character then
+			for i, _ in pairs(WayPoints) do
+				local x = WayPoints[i].COORD[1]
+				local y = WayPoints[i].COORD[2]
+				local z = WayPoints[i].COORD[3]
+				if tostring(WayPoints[i].NAME):lower() == tostring(WPName):lower() then
+					StartFreecam(CFrame.new(x, y, z))
+				end
+			end
+			for i, _ in pairs(pWayPoints) do
+				if tostring(pWayPoints[i].NAME):lower() == tostring(WPName):lower() then
+					StartFreecam(CFrame.new(pWayPoints[i].COORD[1].Position))
+				end
+			end
+		end
+	end
 })
 
 commands:new("freecamgoto", {
-    usage = "freecamgoto [player_name]",
-    aliases = {"fcgoto", "freecamtp", "fctp"},
-    description = "Activate freecam mode and teleport to the specified player's position",
-    callback = function(args, speaker)
-        local players = getPlayer(args[1], speaker)
-        for i, v in pairs(players) do
-            StartFreecam(getRoot(Players[v].Character).CFrame)
-        end
-    end
+	usage = "freecamgoto [player_name]",
+	aliases = {"fcgoto", "freecamtp", "fctp"},
+	description = "Activate freecam mode and teleport to the specified player's position",
+	callback = function(args, speaker)
+		local players = getPlayer(args[1], speaker)
+		for i, v in pairs(players) do
+			StartFreecam(getRoot(Players[v].Character).CFrame)
+		end
+	end
 })
 
 commands:new("unfreecam", {
-    usage = "unfreecam",
-    aliases = {"nofreecam", "unfc", "nofc"},
-    description = "Disables freecam mode",
-    callback = function(args, speaker)
-        StopFreecam()
-    end
+	usage = "unfreecam",
+	aliases = {"nofreecam", "unfc", "nofc"},
+	description = "Disables freecam mode",
+	callback = function(args, speaker)
+		StopFreecam()
+	end
 })
 
 commands:new("freecamspeed", {
-    usage = "freecamspeed [number]",
-    aliases = {"fcspeed"},
-    description = "Sets the freecam speed (default is 1)",
-    callback = function(args, speaker)
-        local FCspeed = args[1] or 1
-        if isNumber(FCspeed) then
-            NAV_KEYBOARD_SPEED = Vector3.new(FCspeed, FCspeed, FCspeed)
-        end
-    end
+	usage = "freecamspeed [number]",
+	aliases = {"fcspeed"},
+	description = "Sets the freecam speed (default is 1)",
+	callback = function(args, speaker)
+		local FCspeed = args[1] or 1
+		if isNumber(FCspeed) then
+			NAV_KEYBOARD_SPEED = Vector3.new(FCspeed, FCspeed, FCspeed)
+		end
+	end
 })
 
 commands:new("notifyfreecamposition", {
-    usage = "notifyfreecamposition",
-    aliases = {"notifyfcpos"},
-    description = "Displays the current position of the freecam",
-    callback = function(args, speaker)
-        if fcRunning then
-            local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
-            local Format, Round = string.format, math.round
-            notify("Current Position", Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
-        end
-    end
+	usage = "notifyfreecamposition",
+	aliases = {"notifyfcpos"},
+	description = "Displays the current position of the freecam",
+	callback = function(args, speaker)
+		if fcRunning then
+			local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
+			local Format, Round = string.format, math.round
+			notify("Current Position", Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
+		end
+	end
 })
 
 commands:new("copyfreecamposition", {
-    usage = "copyfreecamposition",
-    aliases = {"copyfcpos"},
-    description = "Copies the current position of the freecam to clipboard",
-    callback = function(args, speaker)
-        if fcRunning then
-            local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
-            local Format, Round = string.format, math.round
-            toClipboard(Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
-        end
-    end
+	usage = "copyfreecamposition",
+	aliases = {"copyfcpos"},
+	description = "Copies the current position of the freecam to clipboard",
+	callback = function(args, speaker)
+		if fcRunning then
+			local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
+			local Format, Round = string.format, math.round
+			toClipboard(Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
+		end
+	end
 })
 
 commands:new("gotocamera", {
-    usage = "gotocamera",
-    aliases = {"gotocam", "tocam"},
-    description = "Teleports the player's character to the camera's position",
-    callback = function(args, speaker)
-        getRoot(speaker.Character).CFrame = workspace.Camera.CFrame
-    end
+	usage = "gotocamera",
+	aliases = {"gotocam", "tocam"},
+	description = "Teleports the player's character to the camera's position",
+	callback = function(args, speaker)
+		getRoot(speaker.Character).CFrame = workspace.Camera.CFrame
+	end
 })
 
 commands:new("tweengotocamera", {
-    usage = "tweengotocamera",
-    aliases = {"tweengotocam", "tgotocam", "ttocam"},
-    description = "Tweens the player's character to the camera's position",
-    callback = function(args, speaker)
-        TweenService:Create(getRoot(speaker.Character), TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = workspace.Camera.CFrame}):Play()
-    end
+	usage = "tweengotocamera",
+	aliases = {"tweengotocam", "tgotocam", "ttocam"},
+	description = "Tweens the player's character to the camera's position",
+	callback = function(args, speaker)
+		TweenService:Create(getRoot(speaker.Character), TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = workspace.Camera.CFrame}):Play()
+	end
 })
 
 
 commands:new("fov", {
-    usage = "fov [number]",
-    aliases = {},
-    description = "Sets the Field of View of the camera. Default is 70.",
-    callback = function(args, speaker)
-        local fov = args[1] or 70
-        if isNumber(fov) then
-            workspace.CurrentCamera.FieldOfView = fov
-        end
-    end
+	usage = "fov [number]",
+	aliases = {},
+	description = "Sets the Field of View of the camera. Default is 70.",
+	callback = function(args, speaker)
+		local fov = args[1] or 70
+		if isNumber(fov) then
+			workspace.CurrentCamera.FieldOfView = fov
+		end
+	end
 })
 
 local preMaxZoom = Players.LocalPlayer.CameraMaxZoomDistance
 local preMinZoom = Players.LocalPlayer.CameraMinZoomDistance
 
 commands:new("lookat", {
-    usage = "lookat [player]",
-    aliases = {},
-    description = "Zooms in and focuses the camera on the target player's head.",
-    callback = function(args, speaker)
-        if speaker.CameraMaxZoomDistance ~= 0.5 then
-            preMaxZoom = speaker.CameraMaxZoomDistance
-            preMinZoom = speaker.CameraMinZoomDistance
-        end
-        speaker.CameraMaxZoomDistance = 0.5
-        speaker.CameraMinZoomDistance = 0.5
-        wait()
-        local players = getPlayer(args[1], speaker)
-        for i, v in pairs(players) do
-            local target = Players[v].Character
-            if target and target:FindFirstChild('Head') then
-                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, target.Head.CFrame.p)
-                wait(0.1)
-            end
-        end
-        speaker.CameraMaxZoomDistance = preMaxZoom
-        speaker.CameraMinZoomDistance = preMinZoom
-    end
+	usage = "lookat [player]",
+	aliases = {},
+	description = "Zooms in and focuses the camera on the target player's head.",
+	callback = function(args, speaker)
+		if speaker.CameraMaxZoomDistance ~= 0.5 then
+			preMaxZoom = speaker.CameraMaxZoomDistance
+			preMinZoom = speaker.CameraMinZoomDistance
+		end
+		speaker.CameraMaxZoomDistance = 0.5
+		speaker.CameraMinZoomDistance = 0.5
+		wait()
+		local players = getPlayer(args[1], speaker)
+		for i, v in pairs(players) do
+			local target = Players[v].Character
+			if target and target:FindFirstChild('Head') then
+				workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, target.Head.CFrame.p)
+				wait(0.1)
+			end
+		end
+		speaker.CameraMaxZoomDistance = preMaxZoom
+		speaker.CameraMinZoomDistance = preMinZoom
+	end
 })
 
 commands:new("fixcam", {
-    usage = "fixcam",
-    aliases = {"restorecam"},
-    description = "Restores the player's camera to its default state and removes any active freecam.",
-    callback = function(args, speaker)
-        StopFreecam()
-        execCmd('unview')
-        workspace.CurrentCamera:remove()
-        wait(0.1)
-        repeat wait() until speaker.Character ~= nil
-        workspace.CurrentCamera.CameraSubject = speaker.Character:FindFirstChildWhichIsA('Humanoid')
-        workspace.CurrentCamera.CameraType = "Custom"
-        speaker.CameraMinZoomDistance = 0.5
-        speaker.CameraMaxZoomDistance = 400
-        speaker.CameraMode = "Classic"
-        speaker.Character.Head.Anchored = false
-    end
+	usage = "fixcam",
+	aliases = {"restorecam"},
+	description = "Restores the player's camera to its default state and removes any active freecam.",
+	callback = function(args, speaker)
+		StopFreecam()
+		execCmd('unview')
+		workspace.CurrentCamera:remove()
+		wait(0.1)
+		repeat wait() until speaker.Character ~= nil
+		workspace.CurrentCamera.CameraSubject = speaker.Character:FindFirstChildWhichIsA('Humanoid')
+		workspace.CurrentCamera.CameraType = "Custom"
+		speaker.CameraMinZoomDistance = 0.5
+		speaker.CameraMaxZoomDistance = 400
+		speaker.CameraMode = "Classic"
+		speaker.Character.Head.Anchored = false
+	end
 })
 
 commands:new("enableshiftlock", {
-    usage = "enableshiftlock",
-    aliases = {"enablesl", "shiftlock"},
-    description = "Enables shift lock for the player.",
-    callback = function(args, speaker)
-        speaker.DevEnableMouseLock = true
-        notify('Shiftlock', 'Shift lock is now available')
-    end
+	usage = "enableshiftlock",
+	aliases = {"enablesl", "shiftlock"},
+	description = "Enables shift lock for the player.",
+	callback = function(args, speaker)
+		speaker.DevEnableMouseLock = true
+		notify('Shiftlock', 'Shift lock is now available')
+	end
 })
 
 commands:new({
-    usage = "firstp",
-    description = "Switches to First Person mode",
-    callback = function(args, speaker)
-        speaker.CameraMode = "LockFirstPerson"
-    end
+	usage = "firstp",
+	description = "Switches to First Person mode",
+	callback = function(args, speaker)
+		speaker.CameraMode = "LockFirstPerson"
+	end
 })
 
 commands:new({
-    usage = "thirdp",
-    description = "Switches to Third Person mode",
-    callback = function(args, speaker)
-        speaker.CameraMode = "Classic"
-    end
+	usage = "thirdp",
+	description = "Switches to Third Person mode",
+	callback = function(args, speaker)
+		speaker.CameraMode = "Classic"
+	end
 })
 
 commands:new({
-    usage = "noclipcam [nccam]",
-    description = "Enables noclip mode for the camera.",
-    callback = function(args, speaker)
-        local sc = (debug and debug.setconstant) or setconstant
-        local gc = (debug and debug.getconstants) or getconstants
-        if not sc or not getgc or not gc then
-            return notify('Incompatible Exploit', 'Your exploit does not support this command (missing setconstant or getconstants or getgc)')
-        end
-        local pop = speaker.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper
-        for _, v in pairs(getgc()) do
-            if type(v) == 'function' and getfenv(v).script == pop then
-                for i, v1 in pairs(gc(v)) do
-                    if tonumber(v1) == .25 then
-                        sc(v, i, 0)
-                    elseif tonumber(v1) == 0 then
-                        sc(v, i, .25)
-                    end
-                end
-            end
-        end
-    end
+	usage = "noclipcam [nccam]",
+	description = "Enables noclip mode for the camera.",
+	callback = function(args, speaker)
+		local sc = (debug and debug.setconstant) or setconstant
+		local gc = (debug and debug.getconstants) or getconstants
+		if not sc or not getgc or not gc then
+			return notify('Incompatible Exploit', 'Your exploit does not support this command (missing setconstant or getconstants or getgc)')
+		end
+		local pop = speaker.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper
+		for _, v in pairs(getgc()) do
+			if type(v) == 'function' and getfenv(v).script == pop then
+				for i, v1 in pairs(gc(v)) do
+					if tonumber(v1) == .25 then
+						sc(v, i, 0)
+					elseif tonumber(v1) == 0 then
+						sc(v, i, .25)
+					end
+				end
+			end
+		end
+	end
 })
 
 commands:new({
-    usage = "maxzoom [number]",
-    description = "Sets the maximum camera zoom distance.",
-    callback = function(args, speaker)
-        if args[1] and isNumber(args[1]) then
-            speaker.CameraMaxZoomDistance = tonumber(args[1])
-        end
-    end
+	usage = "maxzoom [number]",
+	description = "Sets the maximum camera zoom distance.",
+	callback = function(args, speaker)
+		if args[1] and isNumber(args[1]) then
+			speaker.CameraMaxZoomDistance = tonumber(args[1])
+		end
+	end
 })
 
 commands:new({
-    usage = "minzoom [number]",
-    description = "Sets the minimum camera zoom distance.",
-    callback = function(args, speaker)
-        if args[1] and isNumber(args[1]) then
-            speaker.CameraMinZoomDistance = tonumber(args[1])
-        end
-    end
+	usage = "minzoom [number]",
+	description = "Sets the minimum camera zoom distance.",
+	callback = function(args, speaker)
+		if args[1] and isNumber(args[1]) then
+			speaker.CameraMinZoomDistance = tonumber(args[1])
+		end
+	end
 })
 
 commands:new({
-    usage = "camdistance [number]",
-    description = "Sets both the camera max and min zoom distance to the same value.",
-    callback = function(args, speaker)
-        if args[1] and isNumber(args[1]) then
-            local camMax = speaker.CameraMaxZoomDistance
-            local camMin = speaker.CameraMinZoomDistance
-            if camMax < tonumber(args[1]) then
-                camMax = args[1]
-            end
-            speaker.CameraMaxZoomDistance = tonumber(args[1])
-            speaker.CameraMinZoomDistance = tonumber(args[1])
-            wait()
-            speaker.CameraMaxZoomDistance = camMax
-            speaker.CameraMinZoomDistance = camMin
-        end
-    end
+	usage = "camdistance [number]",
+	description = "Sets both the camera max and min zoom distance to the same value.",
+	callback = function(args, speaker)
+		if args[1] and isNumber(args[1]) then
+			local camMax = speaker.CameraMaxZoomDistance
+			local camMin = speaker.CameraMinZoomDistance
+			if camMax < tonumber(args[1]) then
+				camMax = args[1]
+			end
+			speaker.CameraMaxZoomDistance = tonumber(args[1])
+			speaker.CameraMinZoomDistance = tonumber(args[1])
+			wait()
+			speaker.CameraMaxZoomDistance = camMax
+			speaker.CameraMinZoomDistance = camMin
+		end
+	end
 })
 
 commands:new('unlockws', {
@@ -9334,195 +10682,195 @@ local walkto = false
 local waypointwalkto = false
 
 commands:new({
-    usage = "walkto [player]",
-    description = "Makes your character walk to the target player's position.",
-    callback = function(args, speaker)
-        local players = getPlayer(args[1], speaker)
-        for i, v in pairs(players) do
-            if Players[v].Character ~= nil then
-                if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
-                    speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
-                    wait(.1)
-                end
-                walkto = true
-                repeat wait()
-                    speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(getRoot(Players[v].Character).Position)
-                until Players[v].Character == nil or not getRoot(Players[v].Character) or walkto == false
-            end
-        end
-    end
+	usage = "walkto [player]",
+	description = "Makes your character walk to the target player's position.",
+	callback = function(args, speaker)
+		local players = getPlayer(args[1], speaker)
+		for i, v in pairs(players) do
+			if Players[v].Character ~= nil then
+				if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
+					speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
+					wait(.1)
+				end
+				walkto = true
+				repeat wait()
+					speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(getRoot(Players[v].Character).Position)
+				until Players[v].Character == nil or not getRoot(Players[v].Character) or walkto == false
+			end
+		end
+	end
 })
 
 commands:new({
-    usage = "pathfindwalkto [player]",
-    description = "Makes your character follow a player using pathfinding.",
-    callback = function(args, speaker)
-        walkto = false
-        wait()
-        local players = getPlayer(args[1], speaker)
-        local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        local path = PathService:CreatePath()
+	usage = "pathfindwalkto [player]",
+	description = "Makes your character follow a player using pathfinding.",
+	callback = function(args, speaker)
+		walkto = false
+		wait()
+		local players = getPlayer(args[1], speaker)
+		local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local path = PathService:CreatePath()
 
-        for i, v in pairs(players) do
-            if Players[v].Character ~= nil then
-                if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
-                    speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
-                    wait(.1)
-                end
-                walkto = true
-                repeat wait()
-                    local success, response = pcall(function()
-                        path:ComputeAsync(getRoot(speaker.Character).Position, getRoot(Players[v].Character).Position)
-                        local waypoints = path:GetWaypoints()
-                        local distance
-                        for waypointIndex, waypoint in pairs(waypoints) do
-                            local waypointPosition = waypoint.Position
-                            hum:MoveTo(waypointPosition)
-                            repeat
-                                distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
-                                wait()
-                            until distance <= 5
-                        end
-                    end)
-                    if not success then
-                        speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(getRoot(Players[v].Character).Position)
-                    end
-                until Players[v].Character == nil or not getRoot(Players[v].Character) or walkto == false
-            end
-        end
-    end
+		for i, v in pairs(players) do
+			if Players[v].Character ~= nil then
+				if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
+					speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
+					wait(.1)
+				end
+				walkto = true
+				repeat wait()
+					local success, response = pcall(function()
+						path:ComputeAsync(getRoot(speaker.Character).Position, getRoot(Players[v].Character).Position)
+						local waypoints = path:GetWaypoints()
+						local distance
+						for waypointIndex, waypoint in pairs(waypoints) do
+							local waypointPosition = waypoint.Position
+							hum:MoveTo(waypointPosition)
+							repeat
+								distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
+								wait()
+							until distance <= 5
+						end
+					end)
+					if not success then
+						speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(getRoot(Players[v].Character).Position)
+					end
+				until Players[v].Character == nil or not getRoot(Players[v].Character) or walkto == false
+			end
+		end
+	end
 })
 
 commands:new({
-    usage = "pathfindwalktowaypoint [waypoint name]",
-    description = "Makes your character walk to a specified waypoint using pathfinding.",
-    callback = function(args, speaker)
-        waypointwalkto = false
-        wait()
+	usage = "pathfindwalktowaypoint [waypoint name]",
+	description = "Makes your character walk to a specified waypoint using pathfinding.",
+	callback = function(args, speaker)
+		waypointwalkto = false
+		wait()
 
-        local WPName = tostring(getstring(1))
-        local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        local path = PathService:CreatePath()
+		local WPName = tostring(getstring(1))
+		local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local path = PathService:CreatePath()
 
-        if speaker.Character then
-            for i, _ in pairs(WayPoints) do
-                if tostring(WayPoints[i].NAME):lower() == tostring(WPName):lower() then
-                    if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
-                        speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
-                        wait(.1)
-                    end
+		if speaker.Character then
+			for i, _ in pairs(WayPoints) do
+				if tostring(WayPoints[i].NAME):lower() == tostring(WPName):lower() then
+					if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
+						speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
+						wait(.1)
+					end
 
-                    local TrueCoords = Vector3.new(WayPoints[i].COORD[1], WayPoints[i].COORD[2], WayPoints[i].COORD[3])
-                    waypointwalkto = true
+					local TrueCoords = Vector3.new(WayPoints[i].COORD[1], WayPoints[i].COORD[2], WayPoints[i].COORD[3])
+					waypointwalkto = true
 
-                    repeat wait()
-                        local success, response = pcall(function()
-                            path:ComputeAsync(getRoot(speaker.Character).Position, TrueCoords)
-                            local waypoints = path:GetWaypoints()
-                            local distance
-                            for waypointIndex, waypoint in pairs(waypoints) do
-                                local waypointPosition = waypoint.Position
-                                hum:MoveTo(waypointPosition)
-                                repeat
-                                    distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
-                                    wait()
-                                until distance <= 5
-                            end
-                        end)
+					repeat wait()
+						local success, response = pcall(function()
+							path:ComputeAsync(getRoot(speaker.Character).Position, TrueCoords)
+							local waypoints = path:GetWaypoints()
+							local distance
+							for waypointIndex, waypoint in pairs(waypoints) do
+								local waypointPosition = waypoint.Position
+								hum:MoveTo(waypointPosition)
+								repeat
+									distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
+									wait()
+								until distance <= 5
+							end
+						end)
 
-                        if not success then
-                            speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(TrueCoords)
-                        end
-                    until not speaker.Character or waypointwalkto == false
-                end
-            end
+						if not success then
+							speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(TrueCoords)
+						end
+					until not speaker.Character or waypointwalkto == false
+				end
+			end
 
-            -- Check personal waypoints
-            for i, _ in pairs(pWayPoints) do
-                if tostring(pWayPoints[i].NAME):lower() == tostring(WPName):lower() then
-                    if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
-                        speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
-                        wait(.1)
-                    end
+			-- Check personal waypoints
+			for i, _ in pairs(pWayPoints) do
+				if tostring(pWayPoints[i].NAME):lower() == tostring(WPName):lower() then
+					if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
+						speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
+						wait(.1)
+					end
 
-                    local TrueCoords = pWayPoints[i].COORD[1].Position
-                    waypointwalkto = true
+					local TrueCoords = pWayPoints[i].COORD[1].Position
+					waypointwalkto = true
 
-                    repeat wait()
-                        local success, response = pcall(function()
-                            path:ComputeAsync(getRoot(speaker.Character).Position, TrueCoords)
-                            local waypoints = path:GetWaypoints()
-                            local distance
-                            for waypointIndex, waypoint in pairs(waypoints) do
-                                local waypointPosition = waypoint.Position
-                                hum:MoveTo(waypointPosition)
-                                repeat
-                                    distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
-                                    wait()
-                                until distance <= 5
-                            end
-                        end)
+					repeat wait()
+						local success, response = pcall(function()
+							path:ComputeAsync(getRoot(speaker.Character).Position, TrueCoords)
+							local waypoints = path:GetWaypoints()
+							local distance
+							for waypointIndex, waypoint in pairs(waypoints) do
+								local waypointPosition = waypoint.Position
+								hum:MoveTo(waypointPosition)
+								repeat
+									distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
+									wait()
+								until distance <= 5
+							end
+						end)
 
-                        if not success then
-                            speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(TrueCoords)
-                        end
-                    until not speaker.Character or waypointwalkto == false
-                end
-            end
-        end
-    end
+						if not success then
+							speaker.Character:FindFirstChildOfClass('Humanoid'):MoveTo(TrueCoords)
+						end
+					until not speaker.Character or waypointwalkto == false
+				end
+			end
+		end
+	end
 })
 
 commands:new({
-    usage = "unwalkto",
-    description = "Stops the character from walking to a target or waypoint.",
-    callback = function(args, speaker)
-        walkto = false
-        waypointwalkto = false
-        notify("WalkTo", "Stopped walking to target or waypoint.")
-    end
+	usage = "unwalkto",
+	description = "Stops the character from walking to a target or waypoint.",
+	callback = function(args, speaker)
+		walkto = false
+		waypointwalkto = false
+		notify("WalkTo", "Stopped walking to target or waypoint.")
+	end
 })
 
 commands:new({
-    usage = "orbit [player] [speed] [distance]",
-    description = "Orbits around a target player at a specified speed and distance.",
-    callback = function(args, speaker)
-        execCmd("unorbit nonotify")
-        local target = Players:FindFirstChild(getPlayer(args[1], speaker)[1])
-        local root = getRoot(speaker.Character)
-        local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
-        if target and target.Character and getRoot(target.Character) and root and humanoid then
-            local rotation = 0
-            local speed = tonumber(args[2]) or 0.2
-            local distance = tonumber(args[3]) or 6
-            orbit1 = RunService.Heartbeat:Connect(function()
-                pcall(function()
-                    rotation = rotation + speed
-                    root.CFrame = CFrame.new(getRoot(target.Character).Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(distance, 0, 0)
-                end)
-            end)
-            orbit2 = RunService.RenderStepped:Connect(function()
-                pcall(function()
-                    root.CFrame = CFrame.new(root.Position, getRoot(target.Character).Position)
-                end)
-            end)
-            orbit3 = humanoid.Died:Connect(function() execCmd("unorbit") end)
-            orbit4 = humanoid.Seated:Connect(function(value) if value then execCmd("unorbit") end end)
-            notify("Orbit", "Started orbiting " .. formatUsername(target))
-        end
-    end
+	usage = "orbit [player] [speed] [distance]",
+	description = "Orbits around a target player at a specified speed and distance.",
+	callback = function(args, speaker)
+		execCmd("unorbit nonotify")
+		local target = Players:FindFirstChild(getPlayer(args[1], speaker)[1])
+		local root = getRoot(speaker.Character)
+		local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
+		if target and target.Character and getRoot(target.Character) and root and humanoid then
+			local rotation = 0
+			local speed = tonumber(args[2]) or 0.2
+			local distance = tonumber(args[3]) or 6
+			orbit1 = RunService.Heartbeat:Connect(function()
+				pcall(function()
+					rotation = rotation + speed
+					root.CFrame = CFrame.new(getRoot(target.Character).Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(distance, 0, 0)
+				end)
+			end)
+			orbit2 = RunService.RenderStepped:Connect(function()
+				pcall(function()
+					root.CFrame = CFrame.new(root.Position, getRoot(target.Character).Position)
+				end)
+			end)
+			orbit3 = humanoid.Died:Connect(function() execCmd("unorbit") end)
+			orbit4 = humanoid.Seated:Connect(function(value) if value then execCmd("unorbit") end end)
+			notify("Orbit", "Started orbiting " .. formatUsername(target))
+		end
+	end
 })
 
 commands:new({
-    usage = "unorbit [nonotify]",
-    description = "Stops orbiting the player.",
-    callback = function(args, speaker)
-        if orbit1 then orbit1:Disconnect() end
-        if orbit2 then orbit2:Disconnect() end
-        if orbit3 then orbit3:Disconnect() end
-        if orbit4 then orbit4:Disconnect() end
-        if args[1] ~= "nonotify" then notify("Orbit", "Stopped orbiting player") end
-    end
+	usage = "unorbit [nonotify]",
+	description = "Stops orbiting the player.",
+	callback = function(args, speaker)
+		if orbit1 then orbit1:Disconnect() end
+		if orbit2 then orbit2:Disconnect() end
+		if orbit3 then orbit3:Disconnect() end
+		if orbit4 then orbit4:Disconnect() end
+		if args[1] ~= "nonotify" then notify("Orbit", "Stopped orbiting player") end
+	end
 })
 
 commands:new('freeze', {
@@ -10344,38 +11692,38 @@ commands:new('loopanimation', {
 })
 
 commands:new('tpposition', {
-    usage = 'tpposition / tppos [x] [y] [z]',
-    aliases = { 'tppos' },
-    description = 'Teleports the player to the specified position (x, y, z). Supports relative offsets with "+" and maintaining coordinates with "~".',
-    callback = function(args, speaker)
-        if #args < 3 then return end
+	usage = 'tpposition / tppos [x] [y] [z]',
+	aliases = { 'tppos' },
+	description = 'Teleports the player to the specified position (x, y, z). Supports relative offsets with "+" and maintaining coordinates with "~".',
+	callback = function(args, speaker)
+		if #args < 3 then return end
 
-        local char = speaker.Character
-        if not char then return end
+		local char = speaker.Character
+		if not char then return end
 
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        local root = hum and hum.RootPart or char:FindFirstChild("HumanoidRootPart")
+		local hum = char:FindFirstChildWhichIsA("Humanoid")
+		local root = hum and hum.RootPart or char:FindFirstChild("HumanoidRootPart")
 
-        if typeof(root) ~= "Instance" or not root:IsA("BasePart") then return end
+		if typeof(root) ~= "Instance" or not root:IsA("BasePart") then return end
 
-        local function parseCoord(input, base)
-            if input == "~" then
-                return base
-            elseif input:match("^%+%-?%d+$") or input:match("^-?%d+$") then
-                return base + tonumber(input)
-            else
-                return tonumber(input)
-            end
-        end
+		local function parseCoord(input, base)
+			if input == "~" then
+				return base
+			elseif input:match("^%+%-?%d+$") or input:match("^-?%d+$") then
+				return base + tonumber(input)
+			else
+				return tonumber(input)
+			end
+		end
 
-        local tpX = parseCoord(args[1], root.Position.X)
-        local tpY = parseCoord(args[2], root.Position.Y)
-        local tpZ = parseCoord(args[3], root.Position.Z)
+		local tpX = parseCoord(args[1], root.Position.X)
+		local tpY = parseCoord(args[2], root.Position.Y)
+		local tpZ = parseCoord(args[3], root.Position.Z)
 
-        if tpX and tpY and tpZ then
-            root.CFrame = CFrame.new(tpX, tpY, tpZ)
-        end
-    end
+		if tpX and tpY and tpZ then
+			root.CFrame = CFrame.new(tpX, tpY, tpZ)
+		end
+	end
 })
 
 commands:new('tweentpposition', {
@@ -11234,7 +12582,7 @@ function getTorso(x)
 		local player = x:IsA('Player') and x
 		local character = x:IsA('Model') and x or (player and player.Character)
 		local torso = character and (character:FindFirstChild('Torso') or character:FindFirstChild('UpperTorso'))
-		
+
 		return torso
 	end
 	return nil
@@ -11322,7 +12670,7 @@ commands:new('carpet', {
 						getRoot(Players.LocalPlayer.Character).CFrame = getRoot(Players[carpetplr].Character).CFrame
 					end)
 				end)
-				
+
 				break
 			end
 		else
@@ -12067,62 +13415,62 @@ local function GetHandleTools(p)
 end
 
 commands:new('dupetools', {
-    usage = 'dupetools [count]',
-    aliases = {'clonetools'},
-    description = 'Duplicates the tools held by the speaker and places them in random positions around the map.',
-    callback = function(args, speaker)
-        local LOOP_NUM = tonumber(args[1]) or 1
-        local OrigPos = speaker.Character.HumanoidRootPart.Position
-        local Tools, TempPos = {}, Vector3.new(math.random(-2e5, 2e5), 2e5, math.random(-2e5, 2e5))
-        for i = 1, LOOP_NUM do
-            local Human = speaker.Character:WaitForChild("Humanoid")
-            wait(.1, Human.Parent:MoveTo(TempPos))
-            Human.RootPart.Anchored = speaker:ClearCharacterAppearance(wait(.1)) or true
-            local t = GetHandleTools(speaker)
-            while #t > 0 do
-                for _, v in ipairs(t) do
-                    task.spawn(function()
-                        for _ = 1, 25 do
-                            v.Parent = speaker.Character
-                            v.Handle.Anchored = true
-                        end
-                        for _ = 1, 5 do
-                            v.Parent = workspace
-                        end
-                        table.insert(Tools, v.Handle)
-                    end)
-                end
-                t = GetHandleTools(speaker)
-            end
-            wait(.1)
-            speaker.Character = speaker.Character:Destroy()
-            speaker.CharacterAdded:Wait():WaitForChild("Humanoid").Parent:MoveTo(LOOP_NUM == i and OrigPos or TempPos, wait(.1))
-            if i == LOOP_NUM or i % 5 == 0 then
-                local HRP = speaker.Character.HumanoidRootPart
-                if type(firetouchinterest) == "function" then
-                    for _, v in ipairs(Tools) do
-                        v.Anchored = not firetouchinterest(v, HRP, 1, firetouchinterest(v, HRP, 0)) and false or false
-                    end
-                else
-                    for _, v in ipairs(Tools) do
-                        task.spawn(function()
-                            local x = v.CanCollide
-                            v.CanCollide = false
-                            v.Anchored = false
-                            for _ = 1, 10 do
-                                v.CFrame = HRP.CFrame
-                                wait()
-                            end
-                            v.CanCollide = x
-                        end)
-                    end
-                end
-                wait(.1)
-                Tools = {}
-            end
-            TempPos = TempPos + Vector3.new(10, math.random(-5, 5), 0)
-        end
-    end
+	usage = 'dupetools [count]',
+	aliases = {'clonetools'},
+	description = 'Duplicates the tools held by the speaker and places them in random positions around the map.',
+	callback = function(args, speaker)
+		local LOOP_NUM = tonumber(args[1]) or 1
+		local OrigPos = speaker.Character.HumanoidRootPart.Position
+		local Tools, TempPos = {}, Vector3.new(math.random(-2e5, 2e5), 2e5, math.random(-2e5, 2e5))
+		for i = 1, LOOP_NUM do
+			local Human = speaker.Character:WaitForChild("Humanoid")
+			wait(.1, Human.Parent:MoveTo(TempPos))
+			Human.RootPart.Anchored = speaker:ClearCharacterAppearance(wait(.1)) or true
+			local t = GetHandleTools(speaker)
+			while #t > 0 do
+				for _, v in ipairs(t) do
+					task.spawn(function()
+						for _ = 1, 25 do
+							v.Parent = speaker.Character
+							v.Handle.Anchored = true
+						end
+						for _ = 1, 5 do
+							v.Parent = workspace
+						end
+						table.insert(Tools, v.Handle)
+					end)
+				end
+				t = GetHandleTools(speaker)
+			end
+			wait(.1)
+			speaker.Character = speaker.Character:Destroy()
+			speaker.CharacterAdded:Wait():WaitForChild("Humanoid").Parent:MoveTo(LOOP_NUM == i and OrigPos or TempPos, wait(.1))
+			if i == LOOP_NUM or i % 5 == 0 then
+				local HRP = speaker.Character.HumanoidRootPart
+				if type(firetouchinterest) == "function" then
+					for _, v in ipairs(Tools) do
+						v.Anchored = not firetouchinterest(v, HRP, 1, firetouchinterest(v, HRP, 0)) and false or false
+					end
+				else
+					for _, v in ipairs(Tools) do
+						task.spawn(function()
+							local x = v.CanCollide
+							v.CanCollide = false
+							v.Anchored = false
+							for _ = 1, 10 do
+								v.CFrame = HRP.CFrame
+								wait()
+							end
+							v.CanCollide = x
+						end)
+					end
+				end
+				wait(.1)
+				Tools = {}
+			end
+			TempPos = TempPos + Vector3.new(10, math.random(-5, 5), 0)
+		end
+	end
 })
 
 local RS = RunService.RenderStepped
@@ -13708,9 +15056,9 @@ commands:new('tpunanchored', {
 			for _, part in pairs(workspace:GetDescendants()) do
 				if Players[v].Character:FindFirstChild('Head') and part:IsA("BasePart") or part:IsA("UnionOperation") or part:IsA("Model") then
 					if part.Anchored == false and not part:IsDescendantOf(speaker.Character) and 
-					   part.Name ~= "Torso" and part.Name ~= "Head" and part.Name ~= "Right Arm" and 
-					   part.Name ~= "Left Arm" and part.Name ~= "Right Leg" and part.Name ~= "Left Leg" and 
-					   part.Name ~= "HumanoidRootPart" then
+						part.Name ~= "Torso" and part.Name ~= "Head" and part.Name ~= "Right Arm" and 
+						part.Name ~= "Left Arm" and part.Name ~= "Right Leg" and part.Name ~= "Left Leg" and 
+						part.Name ~= "HumanoidRootPart" then
 						for _, c in pairs(part:GetChildren()) do
 							if c:IsA("BodyPosition") or c:IsA("BodyGyro") then
 								c:Destroy()
@@ -13825,7 +15173,7 @@ commands:new('autokeypress', {
 			cancelAutoKeyPress = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 				if not gameProcessedEvent then
 					if (input.KeyCode == Enum.KeyCode.Backspace and UserInputService:IsKeyDown(Enum.KeyCode.Equals)) or 
-					   (input.KeyCode == Enum.KeyCode.Equals and UserInputService:IsKeyDown(Enum.KeyCode.Backspace)) then
+						(input.KeyCode == Enum.KeyCode.Equals and UserInputService:IsKeyDown(Enum.KeyCode.Backspace)) then
 						autoKeyPressing = false
 						cancelAutoKeyPress:Disconnect()
 					end
