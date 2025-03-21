@@ -12173,94 +12173,23 @@ commands:new('explorer', {
 	aliases = { 'dex' },
 	description = 'Loads an external script for Dex explorer.',
 	callback = function(args, speaker)
-		notify('Loading', 'Hold on a sec')
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-	end
-})
-
-commands:new('olddex', {
-	usage = 'olddex / odex',
-	aliases = { 'odex' },
-	description = 'Loads an old explorer and executes custom scripts with global fixes.',
-	callback = function(args, speaker)
-		notify('Loading old explorer', 'Hold on a sec')
-
-		-- Function to load local asset
-		local getobjects = function(a)
-			local Objects = {}
-			if a then
-				local b = InsertService:LoadLocalAsset(a)
-				if b then 
-					table.insert(Objects, b) 
+		if env.DEX_EXPLORER_LOADED then
+			notify('Dex Explorer Already Loaded', 'To reload it, please rejoin the game.')
+		else
+			notify('Initializing Dex Explorer', 'Please wait while the script is being loaded...')
+			local str = select(2, pcall(game.HttpGet, game, 'https://raw.githubusercontent.com/infyiff/backup/main/dex.lua'))
+			if type(str) == 'string' then
+				local f = select(2, pcall(loadstring, str))
+				if type(f) == 'function' then
+					env.DEX_EXPLORER_LOADED = true
+					coroutine.resume(coroutine.create(f))
+				else
+					notify("Error", "Failed to load the script. The source may be unavailable or invalid.")
 				end
+			else
+				notify('Error', 'Unable to fetch the script. Please check your internet connection or try again later.')
 			end
-			return Objects
 		end
-
-		-- Load the Dex object
-		local Dex = getobjects("rbxassetid://10055842438")[1]
-		Dex.Parent = PARENT
-
-		-- Function to set custom globals and fix script environment
-		local function Load(Obj, Url)
-			local function GiveOwnGlobals(Func, Script)
-				-- Fix for this edit of dex being poorly made
-				local Fenv, RealFenv, FenvMt = {}, {
-					script = Script,
-					getupvalue = function(a, b)
-						return nil -- force it to use globals
-					end,
-					getreg = function()
-						return {} -- force it to use globals
-					end,
-					getprops = getprops or function(inst)
-						if getproperties then
-							local props = getproperties(inst)
-							if props[1] and gethiddenproperty then
-								local results = {}
-								for _,name in pairs(props) do
-									local success, res = pcall(gethiddenproperty, inst, name)
-									if success then
-										results[name] = res
-									end
-								end
-								return results
-							end
-							return props
-						end
-						return {}
-					end
-				}, {}
-				FenvMt.__index = function(a,b)
-					return RealFenv[b] == nil and getgenv()[b] or RealFenv[b]
-				end
-				FenvMt.__newindex = function(a, b, c)
-					if RealFenv[b] == nil then 
-						getgenv()[b] = c 
-					else 
-						RealFenv[b] = c 
-					end
-				end
-				setmetatable(Fenv, FenvMt)
-				pcall(setfenv, Func, Fenv)
-				return Func
-			end
-
-			-- Function to load scripts from the object
-			local function LoadScripts(_, Script)
-				if Script:IsA("LocalScript") then
-					task.spawn(function()
-						GiveOwnGlobals(loadstring(Script.Source, "="..Script:GetFullName()), Script)()
-					end)
-				end
-				table.foreach(Script:GetChildren(), LoadScripts)
-			end
-
-			LoadScripts(nil, Obj)
-		end
-
-		-- Execute the Dex loading
-		Load(Dex)
 	end
 })
 
@@ -12269,10 +12198,23 @@ commands:new('remotespy', {
 	aliases = { 'rspy' },
 	description = 'Loads the SimpleSpy script for remote event spying.',
 	callback = function(args, speaker)
-		notify("Loading", 'Hold on a sec')
-		-- Full credit to exx, creator of SimpleSpy
-		-- Also thanks to NoobSploit for fixing
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua"))()
+		if env.SIMPLYSPY_LOADED then
+			notify('Remote Spy Already Loaded', 'To reload it, please rejoin the game.')
+		else
+			notify('Initializing Remote Spy', 'Please wait while the script loads...')
+			local str = select(2, pcall(game.HttpGet, game, 'https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua'))
+			if type(str) == 'string' then
+				local f = select(2, pcall(loadstring, str))
+				if type(f) == 'function' then
+					env.SIMPLYSPY_LOADED = true
+					coroutine.resume(coroutine.create(f))
+				else
+					notify('Error', 'Failed to load the script. The source may be unavailable or invalid.')
+				end
+			else
+				notify('Error', 'Unable to fetch the script. Please check your internet connection or try again later.')
+			end
+		end
 	end
 })
 
@@ -12281,19 +12223,35 @@ commands:new('audiologger', {
 	aliases = { 'alogger' },
 	description = 'Loads and executes the audio logger script from a remote URL.',
 	callback = function(args, speaker)
-		notify("Loading", 'Hold on a sec')
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/infyiff/backup/main/audiologger.lua', true))()
+		if env.AUDIO_LOGGER_LOADED then
+			notify('Audio Logger Already Loaded', 'To reload it, please rejoin the game.')
+		else
+			notify('Initializing Audio Logger', 'Please wait while the script loads...')
+			local str = select(2, pcall(game.HttpGet, game, 'https://raw.githubusercontent.com/infyiff/backup/main/audiologger.lua'))
+			if type(str) == 'string' then
+				local f = select(2, pcall(loadstring, str))
+				if type(f) == 'function' then
+					env.AUDIO_LOGGER_LOADED = true
+					coroutine.resume(coroutine.create(f))
+				else
+					notify('Error', 'Failed to load the script. The source may be unavailable or invalid.')
+				end
+			else
+				notify('Error', 'Unable to fetch the script. Please check your internet connection or try again later.')
+			end
+		end
 	end
 })
 
 local loopgoto = nil
+
 commands:new('loopgoto', {
 	usage = 'loopgoto [player] [distance] [delay]',
 	aliases = {},
 	description = 'Moves the speaker towards the specified player in a loop with customizable distance and delay.',
 	callback = function(args, speaker)
 		local players = getPlayer(args[1], speaker)
-		local loopgoto = nil
+		loopgoto = nil
 
 		for _, v in pairs(players) do
 			loopgoto = nil
@@ -12339,6 +12297,8 @@ commands:new('unloopgoto', {
 	end
 })
 
+local headSit
+
 commands:new('headsit', {
 	usage = 'headsit [player]',
 	aliases = {},
@@ -12346,15 +12306,15 @@ commands:new('headsit', {
 	callback = function(args, speaker)
 		local players = getPlayer(args[1], speaker)
 
-		-- Disconnect any previous headSit connection
-		if headSit then headSit:Disconnect() end
+		if typeof(headSit) == 'RBXScriptConnection' and headSit.Connected then
+			headSit:Disconnect()
+		end
 
 		for _, v in pairs(players) do
 			local humanoid = speaker.Character and speaker.Character:FindFirstChildOfClass('Humanoid')
 			if humanoid then
 				humanoid.Sit = true
 
-				-- Connect the heartbeat to adjust the speaker's position
 				headSit = RunService.Heartbeat:Connect(function()
 					local targetPlayer = Players:FindFirstChild(Players[v].Name)
 					local targetCharacter = targetPlayer and targetPlayer.Character
