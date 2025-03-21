@@ -2169,14 +2169,14 @@ eventEditor = (function()
 
 	local onEdited = nil
 
-	local function fireEvent(name,...)
+	local function fireEvent(name, ...)
 		local args = {...}
 		local event = events[name]
 		if event then
 			for i,cmd in pairs(event.commands) do
 				local metCondition = true
 				for idx,set in pairs(event.sets) do
-					local argVal = args[idx]
+					local argVal = tostring(args[idx])
 					local cmdSet = cmd[2][idx]
 					local condType = set.Type
 					if condType == "Player" then
@@ -2200,8 +2200,8 @@ eventEditor = (function()
 				if metCondition then
 					pcall(task.spawn(function()
 						local cmdStr = cmd[1]
-						for count,arg in pairs(args) do
-							cmdStr = cmdStr:gsub("%$"..count,arg)
+						for count, arg in pairs(args) do
+							cmdStr = cmdStr:gsub("%$"..count, tostring(arg))
 						end
 						wait(cmd[3] or 0)
 						execCmd(cmdStr)
@@ -6385,7 +6385,54 @@ function getPlayersByName(Name)
 	return Found
 end
 
-function getPlayer(list,speaker)
+function getPlayers(list, speaker)
+    if list == nil then return {speaker} end
+    local nameList = splitString(list, ",")
+
+    local foundList = {}
+
+    for _, name in pairs(nameList) do
+        if string.sub(name, 1, 1) ~= "+" and string.sub(name, 1, 1) ~= "-" then 
+            name = "+" .. name 
+        end
+        
+        local tokens = toTokens(name)
+        local initialPlayers = Players:GetPlayers()
+
+        for _, v in pairs(tokens) do
+            local tokenContent = v.Name
+            local foundCase = false
+            
+            for regex, case in pairs(SpecialPlayerCases) do
+                local matches = {string.match(tokenContent, "^" .. regex .. "$")}
+                if #matches > 0 then
+                    foundCase = true
+                    if v.Operator == "+" then
+                        initialPlayers = onlyIncludeInTable(initialPlayers, case(speaker, matches, initialPlayers))
+                    else
+                        initialPlayers = removeTableMatches(initialPlayers, case(speaker, matches, initialPlayers))
+                    end
+                end
+            end
+            
+            if not foundCase then
+                if v.Operator == "+" then
+                    initialPlayers = onlyIncludeInTable(initialPlayers, getPlayersByName(tokenContent))
+                else
+                    initialPlayers = removeTableMatches(initialPlayers, getPlayersByName(tokenContent))
+                end
+            end
+        end
+
+        for _, player in pairs(initialPlayers) do 
+            table.insert(foundList, player) 
+        end
+    end
+
+    return foundList
+end
+
+function getPlayer(list, speaker)
 	if list == nil then return {speaker.Name} end
 	local nameList = splitString(list,",")
 
@@ -8945,9 +8992,12 @@ commands:new('inspect', {
 	aliases = { 'examine' },
 	description = 'Opens the inspect menu for the specified player.',
 	callback = function(args, speaker)
-		for _, v in ipairs(getPlayer(args[1], speaker)) do
-			GuiService:CloseInspectMenu()
-			GuiService:InspectPlayerFromUserId(Players[v].UserId)
+		for _, v in pairs(getPlayers(args[1], speaker)) do
+			if typeof(v) == 'Instance' and v:IsA('Player') then
+				GuiService:CloseInspectMenu()
+				GuiService:InspectPlayerFromUserId(v.UserId)
+				break
+			end
 		end
 	end
 })
@@ -8957,12 +9007,16 @@ commands:new('savegame', {
 	aliases = { 'saveplace' },
 	description = 'Saves the current game to the workspace folder within your exploit folder.',
 	callback = function(args, speaker)
-		if saveinstance then
-			notify('Loading', 'Downloading game. This will take a while')
-			saveinstance()
-			notify('Game Saved', 'Saved place to the workspace folder within your exploit folder.')
+		if type(saveinstance) == 'function' then
+			local success, response = pcall(saveinstance)
+
+			if success then
+				notify('Game Saved', 'Saved place to the workspace folder within your exploit folder.')
+			else
+				notify('Game Save Fail', response)
+			end
 		else
-			notify('Incompatible Exploit', 'Your exploit does not support this command (missing saveinstance)')
+			notify('Incompatible Exploit', 'Your exploit does not have the required function: saveinstance')
 		end
 	end
 })
@@ -9078,6 +9132,7 @@ commands:new('volume', {
 	end
 })
 
+--[[
 commands:new('antilag', {
 	usage = 'antilag / boostfps / lowgraphics',
 	aliases = { 'boostfps', 'lowgraphics' },
@@ -9125,6 +9180,7 @@ commands:new('antilag', {
 		end)
 	end
 })
+]]
 
 commands:new("setfpscap", {
 	usage = 'setfpscap [fps]',
@@ -15010,11 +15066,12 @@ commands:new('tpunanchored', {
 	aliases = { 'tpua' },
 	description = 'Teleports unanchored parts to a player\'s position.',
 	callback = function(args, speaker)
-		local players = getPlayer(args[1], speaker)
-		for i, v in pairs(players) do
+		local players = getPlayers(args[1], speaker)
+
+		for _, player in pairs(players) do
 			local Forces = {}
 			for _, part in pairs(workspace:GetDescendants()) do
-				if Players[v].Character:FindFirstChild('Head') and part:IsA("BasePart") or part:IsA("UnionOperation") or part:IsA("Model") then
+				if player.Character:FindFirstChild('Head') and part:IsA("BasePart") or part:IsA("UnionOperation") or part:IsA("Model") then
 					if part.Anchored == false and not part:IsDescendantOf(speaker.Character) and 
 						part.Name ~= "Torso" and part.Name ~= "Head" and part.Name ~= "Right Arm" and 
 						part.Name ~= "Left Arm" and part.Name ~= "Right Leg" and part.Name ~= "Left Leg" and 
@@ -15035,7 +15092,7 @@ commands:new('tpunanchored', {
 				end
 			end
 			for _, c in pairs(Forces) do
-				c.Position = Players[v].Character.Head.Position
+				c.Position = player.Character.Head.Position
 			end
 		end
 	end
@@ -15300,31 +15357,24 @@ eventEditor.RegisterEvent("OnChatted",{
 	{Type="String",Name="Message Filter ($2)"}
 })
 
-function hookCharEvents(plr,instant)
-	task.spawn(function()
-		local char = plr.Character
-		if not char then return end
+function hookCharEvents(player, instant)
+	local character = player.Character
+	local humanoid = character and (character:FindFirstChildWhichIsA('Humanoid') or character:WaitForChild('Humanoid', 10))
+	local health = humanoid.Health
 
-		local humanoid = char:WaitForChild("Humanoid",10)
-		if not humanoid then return end
+	humanoid.HealthChanged:Connect(function(newHealth)
+		if health > newHealth then
+			eventEditor.FireEvent('OnDamage', player, newHealth)
+		end
+		health = newHealth
+	end)
 
-		local oldHealth = humanoid.Health
-		humanoid.HealthChanged:Connect(function(health)
-			local change = math.abs(oldHealth - health)
-			if oldHealth > health then
-				eventEditor.FireEvent("OnDamage",plr.Name,tonumber(health))
-			end
-			oldHealth = health
-		end)
-
-		humanoid.Died:Connect(function()
-			eventEditor.FireEvent("OnDied",plr.Name)
-
-			local killedBy = humanoid:FindFirstChild("creator")
-			if killedBy and killedBy.Value and killedBy.Value.Parent then
-				eventEditor.FireEvent("OnKilled",plr.Name,killedBy.Name)
-			end
-		end)
+	humanoid.Died:Connect(function()
+		eventEditor.FireEvent('OnDied', player)
+		local creator = humanoid:FindFirstChild('creator')
+		if creator and creator:IsA('ObjectValue') and creator.Value then
+			eventEditor.FireEvent('OnKilled', player, creator.Value)
+		end
 	end)
 end
 
@@ -15362,11 +15412,12 @@ if not isLegacyChat then
 	end)
 end
 
-for _,plr in pairs(Players:GetPlayers()) do
-	pcall(function()
-		plr.CharacterAdded:Connect(function() eventEditor.FireEvent("OnSpawn",tostring(plr)) hookCharEvents(plr) end)
-		hookCharEvents(plr)
-	end)
+for _, player in pairs(Players:GetPlayers()) do
+	player.CharacterAdded:Connect(function(character)
+		eventEditor.FireEvent('OnSpawn', player)
+		coroutine.wrap(hookCharEvents)(player)
+	end) 
+	coroutine.wrap(hookCharEvents)(player)
 end
 
 if spawnCmds and #spawnCmds > 0 then
