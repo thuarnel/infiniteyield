@@ -1,3 +1,5 @@
+--!nocheck
+
 if type(cloneref) ~= 'function' then cloneref = function(object) return object; end; end
 local RunService = cloneref(game:GetService('RunService'))
 local scriptMode = typeof(script) == 'Instance' and script:IsDescendantOf(game)
@@ -232,11 +234,13 @@ function updateCamera(child, parent)
 			if tick() - startTime > 5 then break end
 			task.wait()
 		end
-		bindToCamera()
+		if type(bindToCamera) == 'function' then
+			bindToCamera()
+		end
 	end
 end
 
-local function bindToCamera()
+function bindToCamera()
 	camera = workspace.CurrentCamera
 	if typeof(camera) == 'Instance' and camera:IsA('Camera') then
 		camera_changed = connect(camera:GetPropertyChangedSignal('ViewportSize'), function()
