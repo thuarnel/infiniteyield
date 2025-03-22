@@ -1,5 +1,4 @@
 --!nocheck
---!nolint UnknownGlobal
 --!nolint LocalShadow
 
 if type(cloneref) ~= 'function' then
@@ -226,6 +225,8 @@ function randomString()
 	return table.concat(array)
 end
 
+local camera, camera_changed, camera_moved, update2viewport
+
 function updateCamera(child, parent)
 	if parent ~= workspace then
 		if camera_moved and typeof(camera_moved) == 'RBXScriptConnection' then
@@ -243,7 +244,6 @@ function updateCamera(child, parent)
 	end
 end
 
-local camera, camera_changed, camera_moved, update2viewport
 local function bindToCamera()
 	camera = workspace.CurrentCamera
 	if typeof(camera) == 'Instance' and camera:IsA('Camera') then
@@ -2007,7 +2007,7 @@ end
 sethidden = sethiddenproperty or set_hidden_property or set_hidden_prop
 gethidden = gethiddenproperty or get_hidden_property or get_hidden_prop
 queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
-httprequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+httprequest = httpget or (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 PlaceId, JobId = game.PlaceId, game.JobId
 local IsOnMobile
 if scriptMode then
@@ -13453,7 +13453,7 @@ local function GetHandleTools(p)
 	if typeof(p) == 'Instance' and p:IsA('Player') then
 		local t = {}
 		local bp = lp:FindFirstChildWhichIsA('Backpack')
-		
+
 		if lp_character then
 			for _, v in pairs(lp_character:GetChildren()) do
 				local handle = v:IsA('Tool') and v:FindFirstChild('Handle')
@@ -13462,7 +13462,7 @@ local function GetHandleTools(p)
 				end
 			end
 		end
-		
+
 		if bp then
 			for _, v in pairs(bp:GetChildren()) do
 				local handle = v:IsA('Tool') and v:FindFirstChild('Handle')
@@ -13471,7 +13471,7 @@ local function GetHandleTools(p)
 				end
 			end
 		end
-		
+
 		return t
 	end
 end
@@ -14242,7 +14242,7 @@ commands:new('spin', {
 		if args[1] and isNumber(args[1]) then
 			spinSpeed = tonumber(args[1])
 		end
-		
+
 		if lp_rootpart then
 			for _, v in pairs(lp_rootpart:GetChildren()) do
 				if v.Name == "Spinning" then
@@ -15416,7 +15416,7 @@ eventEditor.RegisterEvent("OnChatted",{
 function hookCharEvents(player, instant)
 	local character = player.Character
 	local humanoid = character and (character:FindFirstChildWhichIsA('Humanoid') or character:WaitForChild('Humanoid', 10))
-	
+
 	if humanoid then
 		local health = humanoid.Health
 
