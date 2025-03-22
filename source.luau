@@ -9,8 +9,8 @@ if type(cloneref) ~= 'function' then
 end
 
 local RunService = cloneref(game:GetService('RunService'))
-local studio = RunService:IsStudio()
-local env = type(getgenv) == 'function' and getgenv() or (studio and {})
+local scriptMode = typeof(script) == 'Instance' and script:IsDescendantOf(game)
+local env = type(getgenv) == 'function' and getgenv() or (scriptMode and {})
 assert(type(env) == 'table', 'Missing global environment')
 
 if type(env.iy_notify) == 'function' then
@@ -22,12 +22,11 @@ local function connect(signal, callback)
 	return signal:Connect(callback)
 end
 
-if studio == true and typeof(script) == 'Instance' then
-	COREGUI = script:FindFirstAncestorWhichIsA('PlayerGui')
-else
+Players = cloneref(game:GetService("Players"))
+
+if not scriptMode then
 	COREGUI = cloneref(game:GetService('CoreGui'))
 end
-Players = cloneref(game:GetService("Players"))
 
 if not game:IsLoaded() then
 	local notLoaded = Instance.new("Message")
@@ -36,6 +35,56 @@ if not game:IsLoaded() then
 	game.Loaded:Wait()
 	notLoaded:Destroy()
 end
+
+lp = Players.LocalPlayer
+
+if scriptMode then
+	COREGUI = lp:FindFirstChildWhichIsA('PlayerGui')
+end
+
+lp_character = lp.Character
+lp_humanoid, lp_rootpart = nil, nil
+last_death = nil
+NOFLY = nil
+
+function attach_character(c)
+	if type(NOFLY) == 'function' then
+		pcall(NOFLY)
+	end
+
+	Floating = false
+
+	if not Clip and type(execCmd) == 'function' then
+		execCmd('clip')
+	end
+
+	if typeof(c) == 'Instance' and c:IsA('Model') then
+		lp_character = c
+		lp_humanoid, lp_rootpart = nil, nil
+		local startTime = tick()
+
+		while not lp_humanoid and c do
+			lp_humanoid = c:FindFirstChildWhichIsA('Humanoid')
+			if tick() - startTime > 3 then break end
+			wait()
+		end
+
+		startTime = tick()
+		while not lp_rootpart and lp_humanoid do
+			lp_rootpart = lp_humanoid.RootPart
+			if tick() - startTime > 3 then break end
+			wait()
+		end
+
+		if spawnpoint and not refreshCmd and typeof(spawnpos) == 'CFrame' and type(spDelay) == 'number' then
+			wait(spDelay)
+			lp_rootpart.CFrame = spawnpos
+		end
+	end
+end
+
+attach_character(lp_character)
+connect(lp.CharacterAdded, attach_character)
 
 ScaledHolder = Instance.new("Frame")
 Scale = Instance.new("UIScale")
@@ -1919,51 +1968,6 @@ ViewportTextBox.convert(Cmdbar).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_2).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_3).View.ZIndex = 10
 
-lp = Players.LocalPlayer
-lp_character = lp.Character
-lp_humanoid, lp_rootpart = nil, nil
-last_death = nil
-NOFLY = nil
-
-function attach_character(c)
-	if type(NOFLY) == 'function' then
-		pcall(NOFLY)
-	end
-
-	Floating = false
-
-	if not Clip and type(execCmd) == 'function' then
-		execCmd('clip')
-	end
-
-	if typeof(c) == 'Instance' and c:IsA('Model') then
-		lp_character = c
-		lp_humanoid, lp_rootpart = nil, nil
-		local startTime = tick()
-
-		while not lp_humanoid and c do
-			lp_humanoid = c:FindFirstChildWhichIsA('Humanoid')
-			if tick() - startTime > 3 then break end
-			wait()
-		end
-
-		startTime = tick()
-		while not lp_rootpart and lp_humanoid do
-			lp_rootpart = lp_humanoid.RootPart
-			if tick() - startTime > 3 then break end
-			wait()
-		end
-
-		if spawnpoint and not refreshCmd and typeof(spawnpos) == 'CFrame' and type(spDelay) == 'number' then
-			wait(spDelay)
-			lp_rootpart.CFrame = spawnpos
-		end
-	end
-end
-
-attach_character(lp_character)
-connect(lp.CharacterAdded, attach_character)
-
 IYMouse = lp:GetMouse()
 PlayerGui = lp:FindFirstChildWhichIsA("PlayerGui")
 UserInputService = cloneref(game:GetService("UserInputService"))
@@ -2006,7 +2010,7 @@ queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus 
 httprequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 PlaceId, JobId = game.PlaceId, game.JobId
 local IsOnMobile
-if studio then
+if scriptMode then
 	IsOnMobile = UserInputService.TouchEnabled == true
 else 
 	IsOnMobile = table.find({Enum.Platform.IOS, Enum.Platform.Android}, UserInputService:GetPlatform())
@@ -7394,7 +7398,7 @@ connect(Plugins.MouseButton1Click, function()
 		PluginsFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 		wait(0.5)
 		SettingsHolder.Visible = false
-	elseif not studio then
+	elseif not scriptMode then
 		notify('Incompatible Exploit','Your exploit is unable to use plugins (missing read/writefile)')
 	end
 end)
@@ -9065,7 +9069,7 @@ commands:new('rec', {
 	aliases = { 'record' },
 	description = 'Toggles recording in-game. Does not work in Roblox Studio.',
 	callback = function(args, speaker)
-		if not studio then
+		if not scriptMode then
 			COREGUI:ToggleRecording()
 		else
 			notify('Roblox Studio Unsupported', 'This command only works in-game')
@@ -9078,7 +9082,7 @@ commands:new('screenshot', {
 	aliases = { 'scrnshot' },
 	description = 'Takes a screenshot in-game. Does not work in Roblox Studio.',
 	callback = function(args, speaker)
-		if not studio then
+		if not scriptMode then
 			COREGUI:TakeScreenshot()
 		else
 			notify('Roblox Studio Unsupported', 'This command only works in-game')
@@ -10347,7 +10351,7 @@ commands:new('noprompts', {
 	aliases = {'nopurchaseprompts'},
 	description = 'Disables purchase prompts in the game.',
 	callback = function(args, speaker)
-		if not studio then
+		if not scriptMode then
 			COREGUI.PurchasePrompt.Enabled = false
 		end
 	end
@@ -10358,7 +10362,7 @@ commands:new('showprompts', {
 	aliases = {'showpurchaseprompts'},
 	description = 'Enables purchase prompts in the game.',
 	callback = function(args, speaker)
-		if not studio then
+		if not scriptMode then
 			COREGUI.PurchasePrompt.Enabled = true
 		end
 	end
@@ -12632,7 +12636,7 @@ function getTorso(x)
 	return nil
 end
 
-if not studio then
+if not scriptMode then
 	commands:new("bang", {
 		usage = "bang [player] [speed]",
 		aliases = {},
@@ -14227,6 +14231,8 @@ commands:new('unwalkfling', {
 	end
 })
 
+local fidgetSpinners = {}
+
 commands:new('spin', {
 	usage = 'spin [speed]',
 	aliases = {},
@@ -14236,18 +14242,20 @@ commands:new('spin', {
 		if args[1] and isNumber(args[1]) then
 			spinSpeed = tonumber(args[1])
 		end
-
-		for _, v in pairs(getRoot(speaker.Character):GetChildren()) do
-			if v.Name == "Spinning" then
-				v:Destroy()
+		
+		if lp_rootpart then
+			for _, v in pairs(lp_rootpart:GetChildren()) do
+				if v.Name == "Spinning" then
+					v:Destroy()
+				end
 			end
+			local Spin = Instance.new("BodyAngularVelocity")
+			Spin.Name = "Spinning"
+			Spin.Parent = lp_rootpart
+			Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+			Spin.AngularVelocity = Vector3.new(0, spinSpeed, 0)
+			table.insert(fidgetSpinners, Spin)
 		end
-
-		local Spin = Instance.new("BodyAngularVelocity")
-		Spin.Name = "Spinning"
-		Spin.Parent = getRoot(speaker.Character)
-		Spin.MaxTorque = Vector3.new(0, math.huge, 0)
-		Spin.AngularVelocity = Vector3.new(0, spinSpeed, 0)
 	end
 })
 
@@ -14256,19 +14264,24 @@ commands:new('unspin', {
 	aliases = {},
 	description = 'Disables the spinning effect on your character.',
 	callback = function(args, speaker)
-		for _, v in pairs(getRoot(speaker.Character):GetChildren()) do
-			if v.Name == "Spinning" then
-				v:Destroy()
-			end
+		for _, v in pairs(fidgetSpinners) do
+			v:Destroy()
 		end
 	end
 })
 
-xrayEnabled = false
-xray = function()
+local xrayEnabled = false
+local xrayOriginals = {}
+
+function xray()
 	for _, v in pairs(workspace:GetDescendants()) do
 		if v:IsA("BasePart") and not v.Parent:FindFirstChildWhichIsA("Humanoid") and not v.Parent.Parent:FindFirstChildWhichIsA("Humanoid") then
-			v.LocalTransparencyModifier = xrayEnabled and 0.5 or 0
+			if xrayEnabled then
+				xrayOriginals[v] = xrayOriginals[v] or v.LocalTransparencyModifier
+				v.LocalTransparencyModifier = 0.5
+			else
+				v.LocalTransparencyModifier = xrayOriginals[v] or 0
+			end
 		end
 	end
 end
@@ -14999,7 +15012,7 @@ commands:new("unsuspendvc", {
 	usage = "unsuspendvc",
 	description = "Unsuspends you from voice chat",
 	callback = function(args, speaker)
-		if not studio then
+		if not scriptMode then
 			VoiceChatService:joinVoice()
 		else
 			notify('Roblox Studio Unsupported', 'This command only works in-game')
