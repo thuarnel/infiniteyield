@@ -1,5 +1,5 @@
 ```
-loadstring(game:HttpGet('https://raw.githubusercontent.com/shawnjb/infiniteyield/master/source.luau'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/brickmopper/infiniteyield/master/source.luau'))()
 ```
 
 some commits are just me figuring out what my new username should be lmao
