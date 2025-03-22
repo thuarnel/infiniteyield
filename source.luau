@@ -8019,11 +8019,11 @@ function sFLY(vfly)
 	if typeof(flyKeyDown) == 'RBXScriptConnection' then
 		flyKeyDown:Disconnect()
 	end
-	
+
 	if typeof(flyKeyUp) == 'RBXScriptConnection' then
 		flyKeyUp:Disconnect()
 	end
-	
+
 	local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local SPEED = 0
@@ -8076,7 +8076,7 @@ function sFLY(vfly)
 			end)
 		end
 	end
-	
+
 	flyKeyDown = connect(IYMouse.KeyDown, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
@@ -8093,7 +8093,7 @@ function sFLY(vfly)
 		end
 		pcall(function() camera.CameraType = Enum.CameraType.Track end)
 	end)
-	
+
 	flyKeyUp = connect(IYMouse.KeyUp, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = 0
@@ -8109,7 +8109,7 @@ function sFLY(vfly)
 			CONTROL.E = 0
 		end
 	end)
-	
+
 	local flyCheck; flyCheck = connect(RunService.Stepped, function()
 		if not FLYING then
 			FLYING = false
@@ -8134,7 +8134,7 @@ function sFLY(vfly)
 			flyCheck:Disconnect()
 		end
 	end)
-	
+
 	FLY()
 end
 
@@ -8190,7 +8190,7 @@ local mobilefly = function(speaker, vfly)
 			bg.Parent = lp_rootpart
 		end
 	end)
-	
+
 	mfly2 = connect(RunService.RenderStepped, function()
 		if FLYING then
 			bv.MaxForce = v3inf
@@ -8275,6 +8275,43 @@ commands:new('unfly', {
 	description = 'Disables flying mode for the player.',
 	callback = function(args, speaker)
 		FLYING = false
+
+		if typeof(flyKeyDown) == 'RBXScriptConnection' and flyKeyDown.Connected then
+			flyKeyDown:Disconnect()
+		end
+		if typeof(flyKeyUp) == 'RBXScriptConnection' and flyKeyUp.Connected then
+			flyKeyUp:Disconnect()
+		end
+
+		if typeof(BG) == 'Instance' then
+			BG:Destroy()
+		end
+		if typeof(BV) == 'Instance' then
+			BV:Destroy()
+		end
+
+		if lp_humanoid then
+			lp_humanoid.PlatformStand = false
+		end
+
+		if camera then
+			camera.CameraType = Enum.CameraType.Custom
+		end
+
+		if IsOnMobile then
+			if typeof(mfly1) == 'RBXScriptConnection' and mfly1.Connected then
+				mfly1:Disconnect()
+			end
+			if typeof(mfly2) == 'RBXScriptConnection' and mfly2.Connected then
+				mfly2:Disconnect()
+			end
+			if typeof(bg) == 'Instance' then
+				bg:Destroy()
+			end
+			if typeof(bv) == 'Instance' then
+				bv:Destroy()
+			end
+		end
 	end
 })
 
@@ -15652,6 +15689,7 @@ minimizeHolder()
 refreshCommandList()
 
 function env.STOP_INFINITEYIELD()
+	execCmd('unfly\\clip\\unfling\\unweaken\\restorelighting')
 	for _, connection in pairs(connections) do
 		if typeof(connection) == 'RBXScriptConnection' and connection.Connected then
 			connection:Disconnect()
@@ -15667,3 +15705,13 @@ end
 if IsOnMobile then 
 	notify('Unstable Device', 'On mobile, Infinite Yield may have issues or features that are not functioning correctly.') 
 end
+
+commands:new('stopscript', {
+	usage = 'stopscript',
+	description = 'Stops Infinite Yield',
+	callback = function(args, speaker)
+		if type(env.STOP_INFINITEYIELD) == 'function' then
+			env.STOP_INFINITEYIELD()
+		end
+	end,
+})
