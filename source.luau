@@ -1924,9 +1924,53 @@ ViewportTextBox.convert(Cmdbar).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_2).View.ZIndex = 10
 ViewportTextBox.convert(Cmdbar_3).View.ZIndex = 10
 
-LocalPlayer = Players.LocalPlayer
-IYMouse = LocalPlayer:GetMouse()
-PlayerGui = LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+lp = Players.LocalPlayer
+lp_character = lp.Character
+lp_humanoid, lp_rootpart = nil, nil
+last_death = nil
+NOFLY = nil
+
+function attach_character(c)
+	if type(NOFLY) == 'function' then
+		pcall(NOFLY)
+	end
+
+	Floating = false
+
+	if not Clip and type(execCmd) == 'function' then
+		execCmd('clip')
+	end
+
+	if typeof(c) == 'Instance' and c:IsA('Model') then
+		lp_character = c
+		lp_humanoid, lp_rootpart = nil, nil
+		local startTime = tick()
+
+		while not lp_humanoid and c do
+			lp_humanoid = c:FindFirstChildWhichIsA('Humanoid')
+			if tick() - startTime > 3 then break end
+			wait()
+		end
+
+		startTime = tick()
+		while not lp_rootpart and lp_humanoid do
+			lp_rootpart = lp_humanoid.RootPart
+			if tick() - startTime > 3 then break end
+			wait()
+		end
+
+		if spawnpoint and not refreshCmd and typeof(spawnpos) == 'CFrame' and type(spDelay) == 'number' then
+			wait(spDelay)
+			lp_rootpart.CFrame = spawnpos
+		end
+	end
+end
+
+attach_character(lp_character)
+connect(lp.CharacterAdded, attach_character)
+
+IYMouse = lp:GetMouse()
+PlayerGui = lp:FindFirstChildWhichIsA("PlayerGui")
 UserInputService = cloneref(game:GetService("UserInputService"))
 TweenService = cloneref(game:GetService("TweenService"))
 HttpService = cloneref(game:GetService("HttpService"))
@@ -2010,6 +2054,10 @@ end
 
 function getRoot(char)
 	if typeof(char) == 'Instance' then
+		if char:IsA('Player') then
+			char = char.Character
+		end
+
 		local humanoid = char:FindFirstChildWhichIsA('Humanoid')
 		local rootpart = humanoid and humanoid.RootPart
 
@@ -2182,9 +2230,9 @@ eventEditor = (function()
 					local condType = set.Type
 					if condType == "Player" then
 						if cmdSet == 0 then
-							metCondition = metCondition and (tostring(LocalPlayer) == argVal)
+							metCondition = metCondition and (tostring(lp) == argVal)
 						elseif cmdSet ~= 1 then
-							metCondition = metCondition and table.find(getPlayer(cmdSet,LocalPlayer),argVal)
+							metCondition = metCondition and table.find(getPlayer(cmdSet,lp),argVal)
 						end
 					elseif condType == "String" then
 						if cmdSet ~= 0 then
@@ -5278,7 +5326,7 @@ function sendChatWebhook(player, message)
 	end
 end
 
-ChatLog = function(player)
+function ChatLog(player)
 	connect(player.Chatted, function(message)
 		if logsEnabled == true then
 			CreateLabel(player.Name, message)
@@ -5287,13 +5335,13 @@ ChatLog = function(player)
 	end)
 end
 
-JoinLog = function(plr)
+function JoinLog(plr)
 	if jLogsEnabled == true then
 		CreateJoinLabel(plr,plr.UserId)
 	end
 end
 
-CleanFileName = function(name)
+function CleanFileName(name)
 	return tostring(name):gsub("[*\\?:<>|]+", ""):sub(1, 175)
 end
 
@@ -5341,7 +5389,7 @@ connect(Players.PlayerRemoving, function(player)
 		end
 	end
 	if viewing ~= nil and player == viewing then
-		camera.CameraSubject = LocalPlayer.Character
+		camera.CameraSubject = lp.Character
 		viewing = nil
 		if viewDied then
 			viewDied:Disconnect()
@@ -5505,7 +5553,7 @@ connect(ChoosePart.MouseButton1Click, function()
 	end
 end)
 
-cmds={}
+cmds = {}
 customAlias = {}
 
 connect(Delete_3.MouseButton1Click, function()
@@ -5885,47 +5933,8 @@ function refresh(plr)
 	end)
 end
 
-local lastDeath
-
-function onDied()
-	task.spawn(function()
-		if pcall(function() LocalPlayer.Character:FindFirstChildOfClass('Humanoid') end) and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-			connect(LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Died, function()
-				if getRoot(LocalPlayer.Character) then
-					lastDeath = getRoot(LocalPlayer.Character).CFrame
-				end
-			end)
-		else
-			wait(2)
-			onDied()
-		end
-	end)
-end
-
 Clip = true
 spDelay = 0.1
-
-connect(LocalPlayer.CharacterAdded, function()
-	NOFLY()
-	Floating = false
-
-	if not Clip then
-		execCmd('clip')
-	end
-
-	repeat wait() until getRoot(LocalPlayer.Character)
-
-	pcall(function()
-		if spawnpoint and not refreshCmd and spawnpos ~= nil then
-			wait(spDelay)
-			getRoot(LocalPlayer.Character).CFrame = spawnpos
-		end
-	end)
-
-	onDied()
-end)
-
-onDied()
 
 function getstring(begin)
 	local start = begin - 1
@@ -6019,7 +6028,9 @@ function execCmd(cmdStr,speaker,store)
 			if cmd then
 				table.remove(args,1)
 				cargs = args
-				if not speaker then speaker = LocalPlayer end
+				if not speaker then
+					speaker = lp
+				end
 				if store then
 					if speaker == LocalPlayer then
 						if cmdHistory[1] ~= rawCmdStr and rawCmdStr:sub(1,11) ~= 'lastcommand' and rawCmdStr:sub(1,7) ~= 'lastcmd' then
@@ -6560,12 +6571,12 @@ connect(UserInputService.InputBegan, function(input,gameProcessed)
 	end
 end)
 
-connect(LocalPlayer.Chatted, function()
+connect(lp.Chatted, function()
 	wait()
 	if lastEnteredString then
 		local message = lastEnteredString
 		lastEnteredString = nil
-		do_exec(message, LocalPlayer)
+		do_exec(message, lp)
 	end
 end)
 
@@ -6702,8 +6713,8 @@ function ESP(plr)
 				end)
 				local function espLoop()
 					if COREGUI:FindFirstChild(plr.Name..'_ESP') then
-						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-							local pos = math.floor((getRoot(LocalPlayer.Character).Position - getRoot(plr.Character).Position).magnitude)
+						if plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid") and lp_rootpart then
+							local pos = math.floor((lp_rootpart.Position - getRoot(plr.Character).Position).Magnitude)
 							TextLabel.Text = 'Name: '..plr.Name..' | Health: '..round(plr.Character:FindFirstChildOfClass('Humanoid').Health, 1)..' | Studs: '..pos
 						end
 					else
@@ -8002,57 +8013,70 @@ FLYING = false
 QEfly = true
 iyflyspeed = 1
 vehicleflyspeed = 1
-function sFLY(vfly)
-	repeat wait() until LocalPlayer and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	repeat wait() until IYMouse
-	if flyKeyDown or flyKeyUp then flyKeyDown:Disconnect() flyKeyUp:Disconnect() end
+flyKeyDown, flyKeyUp = nil, nil
 
-	local T = getRoot(LocalPlayer.Character)
+function sFLY(vfly)
+	if typeof(flyKeyDown) == 'RBXScriptConnection' then
+		flyKeyDown:Disconnect()
+	end
+	
+	if typeof(flyKeyUp) == 'RBXScriptConnection' then
+		flyKeyUp:Disconnect()
+	end
+	
 	local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local SPEED = 0
 
 	local function FLY()
-		FLYING = true
-		local BG = Instance.new('BodyGyro')
-		local BV = Instance.new('BodyVelocity')
-		BG.P = 9e4
-		BG.Parent = T
-		BV.Parent = T
-		BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		BG.cframe = T.CFrame
-		BV.velocity = Vector3.new(0, 0, 0)
-		BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
-		task.spawn(function()
-			repeat wait()
-				if not vfly and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-					LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = true
+		if lp_rootpart then
+			FLYING = true
+			local BG = Instance.new('BodyGyro')
+			local BV = Instance.new('BodyVelocity')
+			BG.Name = 'IY_BG'
+			BV.Name = 'IY_BV'
+			table.insert(instances, BG)
+			table.insert(instances, BV)
+			BG.P = 9e4
+			BG.Parent = lp_rootpart
+			BV.Parent = lp_rootpart
+			BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+			BG.cframe = lp_rootpart.CFrame
+			BV.velocity = Vector3.new(0, 0, 0)
+			BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+			task.spawn(function()
+				repeat
+					wait()
+					if lp_humanoid then
+						lp_humanoid.PlatformStand = true
+					end
+					if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+						SPEED = 50
+					elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0) and SPEED ~= 0 then
+						SPEED = 0
+					end
+					if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
+						BV.Velocity = ((camera.CFrame.LookVector * (CONTROL.F + CONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
+						lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+					elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
+						BV.Velocity = ((camera.CFrame.LookVector * (lCONTROL.F + lCONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
+					else
+						BV.Velocity = Vector3.new(0, 0, 0)
+					end
+					BG.CFrame = camera.CFrame
+				until not FLYING
+				CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+				lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+				SPEED = 0
+				BG:Destroy()
+				BV:Destroy()
+				if lp_humanoid then
+					lp_humanoid.PlatformStand = false
 				end
-				if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
-					SPEED = 50
-				elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0) and SPEED ~= 0 then
-					SPEED = 0
-				end
-				if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
-					BV.velocity = ((camera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
-					lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
-				elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
-					BV.velocity = ((camera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
-				else
-					BV.velocity = Vector3.new(0, 0, 0)
-				end
-				BG.cframe = camera.CoordinateFrame
-			until not FLYING
-			CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
-			lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
-			SPEED = 0
-			BG:Destroy()
-			BV:Destroy()
-			if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-				LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
-			end
-		end)
+			end)
+		end
 	end
+	
 	flyKeyDown = connect(IYMouse.KeyDown, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
@@ -8069,6 +8093,7 @@ function sFLY(vfly)
 		end
 		pcall(function() camera.CameraType = Enum.CameraType.Track end)
 	end)
+	
 	flyKeyUp = connect(IYMouse.KeyUp, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = 0
@@ -8084,103 +8109,131 @@ function sFLY(vfly)
 			CONTROL.E = 0
 		end
 	end)
+	
+	local flyCheck; flyCheck = connect(RunService.Stepped, function()
+		if not FLYING then
+			FLYING = false
+			if typeof(flyKeyDown) == 'RBXScriptConnection' and flyKeyDown.Connected then
+				flyKeyDown:Disconnect()
+			end
+			if typeof(flyKeyUp) == 'RBXScriptConnection' and flyKeyUp.Connected then
+				flyKeyUp:Disconnect()
+			end
+			if typeof(BG) == 'Instance' then
+				BG:Destroy() 
+			end
+			if typeof(BV) == 'Instance' then
+				BV:Destroy()
+			end
+			if lp_humanoid then
+				lp_humanoid.PlatformStand = false
+			end
+			if camera then
+				camera.CameraType = Enum.CameraType.Custom
+			end
+			flyCheck:Disconnect()
+		end
+	end)
+	
 	FLY()
 end
 
-function NOFLY()
-	FLYING = false
-	if typeof(flyKeyDown) == 'RBXScriptConnection' and flyKeyDown.Connected then
-		flyKeyDown:Disconnect()
-	end
-	if typeof(flyKeyUp) == 'RBXScriptConnection' and flyKeyUp.Connected then
-		flyKeyUp:Disconnect()
-	end
-	if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-		LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
-	end
-	pcall(function() camera.CameraType = Enum.CameraType.Custom end)
-end
-
-local velocityHandlerName = randomString()
-local gyroHandlerName = randomString()
 local mfly1
 local mfly2
 
-local unmobilefly = function(speaker)
-	pcall(function()
-		FLYING = false
-		local root = getRoot(speaker.Character)
-		root:FindFirstChild(velocityHandlerName):Destroy()
-		root:FindFirstChild(gyroHandlerName):Destroy()
-		speaker.Character:FindFirstChildWhichIsA("Humanoid").PlatformStand = false
-		mfly1:Disconnect()
-		mfly2:Disconnect()
-	end)
-end
-
 local mobilefly = function(speaker, vfly)
-	unmobilefly(speaker)
+	FLYING = false
+	wait(0.1)
 	FLYING = true
 
-	local root = getRoot(speaker.Character)
 	local v3none = Vector3.new()
 	local v3zero = Vector3.new(0, 0, 0)
 	local v3inf = Vector3.new(9e9, 9e9, 9e9)
 
 	local controlModule = require(speaker.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
 	local bv = Instance.new("BodyVelocity")
-	bv.Name = velocityHandlerName
-	bv.Parent = root
+	bv.Name = 'IY_BV'
+	bv.Parent = lp_rootpart
 	bv.MaxForce = v3zero
 	bv.Velocity = v3zero
 
 	local bg = Instance.new("BodyGyro")
-	bg.Name = gyroHandlerName
-	bg.Parent = root
+	bg.Name = 'IY_BG'
+	bg.Parent = lp_rootpart
 	bg.MaxTorque = v3inf
 	bg.P = 1000
 	bg.D = 50
 
-	mfly1 = connect(speaker.CharacterAdded, function()
-		local bv = Instance.new("BodyVelocity")
-		bv.Name = velocityHandlerName
-		bv.Parent = root
-		bv.MaxForce = v3zero
-		bv.Velocity = v3zero
+	mfly1 = connect(speaker.CharacterAdded, function()		
+		if FLYING then
+			if not bv then
+				bv = Instance.new("BodyVelocity")
+				bv.Name = 'IY_BV'
+				bv.MaxForce = v3zero
+				bv.Velocity = v3zero
+			end
 
-		local bg = Instance.new("BodyGyro")
-		bg.Name = gyroHandlerName
-		bg.Parent = root
-		bg.MaxTorque = v3inf
-		bg.P = 1000
-		bg.D = 50
+			repeat
+				wait()
+			until lp_rootpart
+
+			bv.Parent = lp_rootpart
+
+			if not bg then
+				bg = Instance.new("BodyGyro")
+				bg.Name = 'IY_BG'
+				bg.MaxTorque = v3inf
+				bg.P = 1000
+				bg.D = 50
+			end
+
+			bg.Parent = lp_rootpart
+		end
 	end)
-
+	
 	mfly2 = connect(RunService.RenderStepped, function()
-		root = getRoot(speaker.Character)
-		if speaker.Character:FindFirstChildWhichIsA("Humanoid") and root and root:FindFirstChild(velocityHandlerName) and root:FindFirstChild(gyroHandlerName) then
-			local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
-			local VelocityHandler = root:FindFirstChild(velocityHandlerName)
-			local GyroHandler = root:FindFirstChild(gyroHandlerName)
+		if FLYING then
+			bv.MaxForce = v3inf
+			bg.MaxTorque = v3inf
 
-			VelocityHandler.MaxForce = v3inf
-			GyroHandler.MaxTorque = v3inf
-			if not vfly then humanoid.PlatformStand = true end
-			GyroHandler.CFrame = camera.CoordinateFrame
-			VelocityHandler.Velocity = v3none
+			if lp_humanoid and not vfly then
+				lp_humanoid.PlatformStand = true
+			end
+
+			bg.CFrame = camera.CoordinateFrame
+			bv.Velocity = v3none
 
 			local direction = controlModule:GetMoveVector()
 			if direction.X > 0 then
-				VelocityHandler.Velocity = VelocityHandler.Velocity + camera.CFrame.RightVector * (direction.X * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+				bv.Velocity = bv.Velocity + camera.CFrame.RightVector * (direction.X * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
 			end
 			if direction.X < 0 then
-				VelocityHandler.Velocity = VelocityHandler.Velocity + camera.CFrame.RightVector * (direction.X * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+				bv.Velocity = bv.Velocity + camera.CFrame.RightVector * (direction.X * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
 			end
 			if direction.Z > 0 then
-				VelocityHandler.Velocity = VelocityHandler.Velocity - camera.CFrame.LookVector * (direction.Z * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+				bv.Velocity = bv.Velocity - camera.CFrame.LookVector * (direction.Z * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
 			end
 			if direction.Z < 0 then
-				VelocityHandler.Velocity = VelocityHandler.Velocity - camera.CFrame.LookVector * (direction.Z * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+				bv.Velocity = bv.Velocity - camera.CFrame.LookVector * (direction.Z * ((vfly and vehicleflyspeed or iyflyspeed) * 50))
+			end
+		else
+			if typeof(mfly1) == 'RBXScriptConnection' and mfly1.Connected then
+				mfly1:Disconnect()
+			end
+			if typeof(mfly2) == 'RBXScriptConnection' and mfly2.Connected then
+				mfly2:Disconnect()
+			end
+			if typeof(bg) == 'Instance' then
+				bg:Destroy()
+			end
+			if typeof(bv) == 'Instance' then
+				bv:Destroy()
+			end
+			if lp_humanoid then
+				lp_humanoid.PlatformStand = false
+			end
+			if camera then
+				camera.CameraType = Enum.CameraType.Custom
 			end
 		end
 	end)
@@ -8192,7 +8245,7 @@ commands:new('fly', {
 	description = 'Activates flying mode for the player with an optional speed.',
 	callback = function(args, speaker)
 		if not IsOnMobile then
-			NOFLY()
+			FLYING = false
 			wait()
 			sFLY()
 		else
@@ -8221,11 +8274,7 @@ commands:new('unfly', {
 	aliases = { 'nofly', 'novfly', 'unvehiclefly', 'novehiclefly', 'unvfly' },
 	description = 'Disables flying mode for the player.',
 	callback = function(args, speaker)
-		if IsOnMobile then
-			unmobilefly(speaker)
-		else
-			NOFLY()
-		end
+		FLYING = false
 	end
 })
 
@@ -8235,7 +8284,7 @@ commands:new('vfly', {
 	description = 'Activates vehicle flying mode for the player with an optional speed.',
 	callback = function(args, speaker)
 		if not IsOnMobile then
-			NOFLY()
+			FLYING = false
 			wait()
 			sFLY(true)
 		else
@@ -8253,7 +8302,7 @@ commands:new('togglevfly', {
 	description = 'Toggles vehicle flying mode for the player.',
 	callback = function(args, speaker)
 		if FLYING then
-			if not IsOnMobile then NOFLY() else unmobilefly(speaker) end
+			FLYING = false
 		else
 			if not IsOnMobile then sFLY(true) else mobilefly(speaker, true) end
 		end
@@ -8291,9 +8340,13 @@ commands:new('togglefly', {
 	description = 'Toggles flying mode for the player.',
 	callback = function(args, speaker)
 		if FLYING then
-			if not IsOnMobile then NOFLY() else unmobilefly(speaker) end
+			FLYING = false
 		else
-			if not IsOnMobile then sFLY() else mobilefly(speaker) end
+			if not IsOnMobile then
+				sFLY()
+			else
+				mobilefly(speaker)
+			end
 		end
 	end
 })
@@ -9932,8 +9985,8 @@ commands:new("fov", {
 	end
 })
 
-local preMaxZoom = LocalPlayer.CameraMaxZoomDistance
-local preMinZoom = LocalPlayer.CameraMinZoomDistance
+local preMaxZoom = lp.CameraMaxZoomDistance
+local preMinZoom = lp.CameraMinZoomDistance
 
 commands:new("lookat", {
 	usage = "lookat [player]",
@@ -10245,7 +10298,7 @@ commands:new('antiafk', {
 	callback = function(args, speaker)
 		local GC = getconnections or get_signal_cons
 		if GC then
-			for i,v in pairs(GC(LocalPlayer.Idled)) do
+			for i,v in pairs(GC(lp.Idled)) do
 				if v["Disable"] then
 					v["Disable"](v)
 				elseif v["Disconnect"] then
@@ -10254,7 +10307,7 @@ commands:new('antiafk', {
 			end
 		else
 			local VirtualUser = cloneref(game:GetService("VirtualUser"))
-			connect(LocalPlayer.Idled, function()
+			connect(lp.Idled, function()
 				VirtualUser:CaptureController()
 				VirtualUser:ClickButton2(Vector2.new())
 			end)
@@ -10804,7 +10857,6 @@ commands:new({
 		walkto = false
 		wait()
 		local players = getPlayer(args[1], speaker)
-		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		local path = PathService:CreatePath()
 
 		for i, v in pairs(players) do
@@ -10820,12 +10872,16 @@ commands:new({
 						local waypoints = path:GetWaypoints()
 						local distance
 						for waypointIndex, waypoint in pairs(waypoints) do
-							local waypointPosition = waypoint.Position
-							hum:MoveTo(waypointPosition)
-							repeat
-								distance = (waypointPosition - hum.Parent.PrimaryPart.Position).magnitude
-								wait()
-							until distance <= 5
+							if lp_humanoid then
+								local waypointPosition = waypoint.Position
+								lp_humanoid:MoveTo(waypointPosition)
+								repeat
+									if lp_humanoid then
+										distance = (waypointPosition - lp_humanoid.Parent.PrimaryPart.Position).magnitude
+									end
+									wait()
+								until distance <= 5
+							end
 						end
 					end)
 					if not success then
@@ -11718,19 +11774,30 @@ commands:new('refreshanimations', {
 	aliases = { 'refreshanimation', 'refreshanims', 'refreshanim' },
 	description = 'Disables and refreshes the character\'s animations.',
 	callback = function(args, speaker)
-		local Char = speaker.Character or speaker.CharacterAdded:Wait()
-		local Human = Char and Char:WaitForChild('Humanoid', 15)
-		local Animate = Char and Char:WaitForChild('Animate', 15)
+		local character = speaker.Character
+		local animate
+		for _, v in pairs(character:GetChildren()) do
+			if v:IsA('LocalScript') and v.Name == 'Animate' then
+				animate = v
+				break
+			end
+		end
+		local humanoid = character and character:FindFirstChildWhichIsA('Humanoid')
+		local animator = humanoid and humanoid:FindFirstChildWhichIsA('Animator')
 
-		if not Human or not Animate then
-			return notify('Refresh Animations', 'Failed to get Animate/Humanoid')
+		if animate then 
+			animate.Disabled = true 
 		end
 
-		Animate.Disabled = true
-		for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
-			v:Stop()
+		if animator then
+			for _, animation in pairs(animator:GetPlayingAnimationTracks()) do
+				animation:Stop(0)
+			end
 		end
-		Animate.Disabled = false
+
+		if animate then 
+			animate.Disabled = false
+		end
 	end
 })
 
@@ -11759,11 +11826,13 @@ commands:new('loopanimation', {
 	aliases = { 'loopanim' },
 	description = 'Loops all the currently playing animations for the speaker\'s character.',
 	callback = function(args, speaker)
-		local Char = speaker.Character
-		local Human = Char and Char:FindFirstChildWhichIsA("Humanoid")
-		if Human then
-			for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
-				v.Looped = true
+		local character = speaker.Character
+		local humanoid = character and character:FindFirstChildWhichIsA('Humanoid')
+		local animator = humanoid and humanoid:FindFirstChildWhichIsA('Animator')
+
+		if animator then
+			for _, animation in pairs(animator:GetPlayingAnimationTracks()) do
+				animation.Looped = true
 			end
 		end
 	end
@@ -11772,37 +11841,30 @@ commands:new('loopanimation', {
 commands:new('tpposition', {
 	usage = 'tpposition / tppos [x] [y] [z]',
 	aliases = { 'tppos' },
-	description = 'Teleports the player to the specified position (x, y, z). Supports relative offsets with "+" and maintaining coordinates with "~".',
+	description = 'Teleports the player to the specified position (x, y, z).',
 	callback = function(args, speaker)
-		if #args < 3 then return end
-
-		local char = speaker.Character
-		if not char then return end
-
-		local hum = char:FindFirstChildWhichIsA("Humanoid")
-		local root = hum and hum.RootPart or char:FindFirstChild("HumanoidRootPart")
-
-		if typeof(root) ~= "Instance" or not root:IsA("BasePart") then return end
-
-		local function parseCoord(input, base)
-			if input == "~" then
-				return base
-			elseif input:match("^%+%-?%d+$") or input:match("^-?%d+$") then
-				return base + tonumber(input)
+		if #args < 3 then
+			local coords = string.split(args[1], ",")
+			if #coords == 3 then
+				args = coords
 			else
-				return tonumber(input)
+				return
 			end
 		end
 
-		local tpX = parseCoord(args[1], root.Position.X)
-		local tpY = parseCoord(args[2], root.Position.Y)
-		local tpZ = parseCoord(args[3], root.Position.Z)
+		local x, y, z = tonumber(args[1]), tonumber(args[2]), tonumber(args[3])
 
-		if tpX and tpY and tpZ then
-			root.CFrame = CFrame.new(tpX, tpY, tpZ)
+		if not (x and y and z) then
+			return
+		end
+
+		local rootpart = getRoot(speaker)
+		if typeof(rootpart) == 'Instance' and rootpart:IsA('BasePart') then
+			rootpart.CFrame = CFrame.new(Vector3.new(x, y, z))
 		end
 	end
 })
+
 
 commands:new('tweentpposition', {
 	usage = 'tweentpposition / ttppos [x] [y] [z]',
@@ -11827,8 +11889,17 @@ commands:new('offset', {
 		if #args < 3 then
 			return
 		end
-		if speaker.Character then
-			speaker.Character:TranslateBy(Vector3.new(tonumber(args[1]) or 0, tonumber(args[2]) or 0, tonumber(args[3]) or 0))
+
+		local x, y, z = tonumber(args[1]), tonumber(args[2]), tonumber(args[3])
+
+		if not (x and y and z) then
+			return
+		end
+
+		local rootpart = getRoot(speaker)
+		if typeof(rootpart) == 'Instance' and rootpart:IsA('BasePart') then
+			local currentPos = rootpart.Position
+			rootpart.CFrame = CFrame.new(currentPos + Vector3.new(x, y, z))
 		end
 	end
 })
@@ -15581,48 +15652,18 @@ minimizeHolder()
 refreshCommandList()
 
 function env.STOP_INFINITEYIELD()
-	env.NOTIFY = nil
-	loopgoto = nil
-	bringT = {}
-
-	pcall(execCmd, 'unfling')
-	pcall(execCmd, 'breakloops')
-
-	if IsOnMobile then
-		unmobilefly(speaker)
-	else
-		NOFLY()
-	end
-
-	if Noclipping then
-		Noclipping:Disconnect()
-	end
-	Clip = true
-
 	for _, connection in pairs(connections) do
 		if typeof(connection) == 'RBXScriptConnection' and connection.Connected then
 			connection:Disconnect()
 		end
 	end
-
 	for _, instance in pairs(instances) do
 		if typeof(instance) == 'Instance' then
 			instance:Destroy()
 		end
 	end
-
-	task.wait()
-
-	local char = LocalPlayer.Character
-	if typeof(char) == 'Instance' and char:IsA('Model') then
-		for _, part in pairs(char:GetDescendants()) do
-			if part:IsA('BasePart') then
-				part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
-				part.AssemblyLinearVelocity = Vector3.zero
-				part.AssemblyAngularVelocity = Vector3.zero
-			end
-		end
-	end
 end
 
-if IsOnMobile then notify("Unstable Device", "On mobile, Infinite Yield may have issues or features that are not functioning correctly.") end
+if IsOnMobile then 
+	notify('Unstable Device', 'On mobile, Infinite Yield may have issues or features that are not functioning correctly.') 
+end
