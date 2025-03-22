@@ -251,7 +251,7 @@ Title.BorderSizePixel = 0
 Title.Size = UDim2.new(0, 250, 0, 20)
 Title.Font = Enum.Font.SourceSans
 Title.TextSize = 18
-Title.Text = 'Shawn\'s IY'
+Title.Text = 'Infinite Yield (BM Edit)'
 
 do
 	local emoji = ({
