@@ -5889,15 +5889,8 @@ function GetInTable(Table, Name)
 end
 
 function respawn(plr)
-	if invisRunning then 
-		TurnVisible() 
-	end
-	if lp_character then
-		if lp_humanoid then
-			lp_humanoid:ChangeState(15)
-		end
-		wait()
-		lp_character:ClearAllChildren()
+	if lp_humanoid then
+		lp_humanoid:ChangeState(15)
 	end
 end
 
