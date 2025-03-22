@@ -1,7 +1,9 @@
+# thuarnel's Infinite Yield
+
 ```
 loadstring(game:HttpGet('https://raw.githubusercontent.com/thuarnel/infiniteyield/master/source.luau'))()
 ```
 
-some commits are just me figuring out what my new username should be lmao
+---
 
-but there's a lot of changes in the script (you might prefer this over the original)
+This fork is dedicated to bug-fixes and command improvements. Some new commands may show up soon.
