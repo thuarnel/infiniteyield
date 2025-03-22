@@ -13,9 +13,17 @@ local studio = RunService:IsStudio()
 local env = type(getgenv) == 'function' and getgenv() or (studio and {})
 assert(type(env) == 'table', 'Missing global environment')
 
-if type(env.IY_LOADED) and type(env.IY_NOTIFY) == 'function' then
-	env.IY_NOTIFY('Rejoin to Reload', 'Rejoin the game to reload Infinite Yield')
-	return
+local instances = {}
+local connections = {}
+
+local function connect(signal, callback)
+	local connection = signal:Connect(callback)
+	table.insert(connections, connection)
+	return connection
+end
+
+if type(env.STOP_INFINITEYIELD) == 'function' then
+	env.STOP_INFINITEYIELD()
 end
 
 if studio == true and typeof(script) == 'Instance' then
@@ -64,9 +72,6 @@ PinImage = Instance.new("ImageLabel")
 Tooltip = Instance.new("Frame")
 Title_3 = Instance.new("TextLabel")
 Description = Instance.new("TextLabel")
-IntroBackground = Instance.new("Frame")
-Logo = Instance.new("ImageLabel")
-Credits = Instance.new("TextBox")
 KeybindsFrame = Instance.new("Frame")
 Close = Instance.new("TextButton")
 Add = Instance.new("TextButton")
@@ -176,10 +181,44 @@ function randomString()
 	return table.concat(array)
 end
 
+function updateCamera(child, parent)
+	if parent ~= workspace then
+		if camera_moved and typeof(camera_moved) == 'RBXScriptConnection' then
+			camera_moved:Disconnect()
+		end
+		if camera_changed and typeof(camera_changed) == 'RBXScriptConnection' then
+			camera_changed:Disconnect()
+		end
+		local startTime = tick()
+		while not camera do
+			if tick() - startTime > 5 then break end
+			task.wait()
+		end
+		bindToCamera()
+	end
+end
+
+local camera, camera_changed, camera_moved, update2viewport
+local function bindToCamera()
+	camera = workspace.CurrentCamera
+	if typeof(camera) == 'Instance' and camera:IsA('Camera') then
+		camera_changed = connect(camera:GetPropertyChangedSignal('ViewportSize'), function()
+			if type(update2viewport) == 'function' then
+				update2viewport()
+			end
+		end)
+		camera_moved = connect(camera.AncestryChanged, updateCamera)
+	end
+end
+
+bindToCamera()
+connect(workspace:GetPropertyChangedSignal('CurrentCamera'), bindToCamera)
+
 local PARENT = Instance.new('ScreenGui')
 PARENT.Name = 'IY'
 PARENT.ResetOnSpawn = false
 PARENT.Parent = COREGUI
+table.insert(instances, PARENT)
 
 shade1 = {}
 shade2 = {}
@@ -596,37 +635,6 @@ Description.TextTransparency = 0.1
 Description.TextWrapped = true
 Description.ZIndex = 10
 table.insert(text1,Description)
-
-IntroBackground.Name = "IntroBackground"
-IntroBackground.Parent = Holder
-IntroBackground.Active = true
-IntroBackground.BackgroundColor3 = Color3.fromRGB(36, 36, 37)
-IntroBackground.BorderSizePixel = 0
-IntroBackground.Position = UDim2.new(0, 0, 0, 45)
-IntroBackground.Size = UDim2.new(0, 250, 0, 175)
-IntroBackground.ZIndex = 10
-
-Logo.Name = "Logo"
-Logo.Parent = Holder
-Logo.BackgroundTransparency = 1
-Logo.BorderSizePixel = 0
-Logo.Position = UDim2.new(0, 125, 0, 127)
-Logo.Size = UDim2.new(0, 10, 0, 10)
-Logo.Image = "rbxassetid://1352543873"
-Logo.ImageTransparency = 0
-Logo.ZIndex = 10
-
-Credits.Name = "Credits"
-Credits.Parent = Holder
-Credits.BackgroundTransparency = 1
-Credits.BorderSizePixel = 0
-Credits.Position = UDim2.new(0, 0, 0.9, 30)
-Credits.Size = UDim2.new(0, 250, 0, 20)
-Credits.Font = Enum.Font.SourceSansLight
-Credits.FontSize = Enum.FontSize.Size18
-Credits.Text = "Edge // Zwolf // Moon // Toon"
-Credits.TextColor3 = Color3.new(1, 1, 1)
-Credits.ZIndex = 10
 
 KeybindsFrame.Name = "KeybindsFrame"
 KeybindsFrame.Parent = Settings
@@ -1461,7 +1469,7 @@ PluginsHint.Position = UDim2.new(0, 25, 0, 40)
 PluginsHint.Size = UDim2.new(0, 200, 0, 50)
 PluginsHint.Font = Enum.Font.SourceSansItalic
 PluginsHint.TextSize = 16
-PluginsHint.Text = "Download plugins from the IY Discord (discord.gg/78ZuWSq)"
+PluginsHint.Text = "Download plugins from the IY Discord (discord.gg/mqxKX5EXhU)"
 PluginsHint.TextColor3 = Color3.new(1, 1, 1)
 PluginsHint.TextStrokeColor3 = Color3.new(1, 1, 1)
 PluginsHint.TextWrapped = true
@@ -1895,7 +1903,7 @@ ViewportTextBox = (function()
 
 		obj.View = view
 
-		textbox.Changed:Connect(function(prop)
+		connect(textbox.Changed, function(prop)
 			if prop == "Text" or prop == "CursorPosition" or prop == "AbsoluteSize" then
 				obj:Update()
 			end
@@ -2117,25 +2125,27 @@ function dragGUI(gui)
 			local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 			TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
 		end
-		gui.InputBegan:Connect(function(input)
+		connect(gui.InputBegan, function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				dragging = true
 				dragStart = input.Position
 				startPos = gui.Position
 
-				input.Changed:Connect(function()
+				connect(input.Changed, function()
 					if input.UserInputState == Enum.UserInputState.End then
 						dragging = false
 					end
 				end)
 			end
 		end)
-		gui.InputChanged:Connect(function(input)
+
+		connect(gui.InputChanged, function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 				dragInput = input
 			end
 		end)
-		UserInputService.InputChanged:Connect(function(input)
+
+		connect(UserInputService.InputChanged, function(input)
 			if input == dragInput and dragging then
 				update(input)
 			end
@@ -2293,7 +2303,7 @@ eventEditor = (function()
 
 	local currentlyEditingCmd = nil
 
-	settingsFrame:WaitForChild("Close").MouseButton1Click:Connect(function()
+	connect(settingsFrame:WaitForChild('Close').MouseButton1Click, function()
 		settingsFrame:TweenPosition(UDim2.new(0,-150,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quart,0.25,true)
 	end)
 
@@ -2343,7 +2353,7 @@ eventEditor = (function()
 			button.On.BackgroundTransparency = (enabled and 0 or 1)
 		end
 
-		button.On.MouseButton1Click:Connect(function()
+		connect(button.On.MouseButton1Click, function()
 			enabled = not enabled
 			update()
 			if callback then callback(enabled) end
@@ -2363,7 +2373,7 @@ eventEditor = (function()
 		for i,v in pairs(settingsList:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
 
 		local delayEditor = settingsTemplates.DelayEditor:Clone()
-		delayEditor.Secs.FocusLost:Connect(function()
+		connect(delayEditor.Secs.FocusLost, function()
 			cmd[3] = tonumber(delayEditor.Secs.Text) or 0
 			delayEditor.Secs.Text = cmd[3]
 			if onEdited then onEdited() end
@@ -2408,7 +2418,7 @@ eventEditor = (function()
 				end)
 
 				ViewportTextBox.convert(customTextBox)
-				customTextBox.FocusLost:Connect(function()
+				connect(customTextBox.FocusLost, function()
 					if custom:IsEnabled() then
 						cmd[2][i] = customTextBox.Text
 						if onEdited then onEdited() end
@@ -2455,7 +2465,7 @@ eventEditor = (function()
 				end)
 
 				ViewportTextBox.convert(customTextBox)
-				customTextBox.FocusLost:Connect(function()
+				connect(customTextBox.FocusLost, function()
 					if custom:IsEnabled() then
 						cmd[2][i] = customTextBox.Text
 						if onEdited then onEdited() end
@@ -2498,7 +2508,7 @@ eventEditor = (function()
 				end)
 
 				ViewportTextBox.convert(customTextBox)
-				customTextBox.FocusLost:Connect(function()
+				connect(customTextBox.FocusLost, function()
 					cmd[2][i] = tonumber(customTextBox.Text) or 0
 					customTextBox.Text = cmd[2][i]
 					if custom:IsEnabled() then
@@ -2555,7 +2565,7 @@ eventEditor = (function()
 			table.insert(shade1,eventF.Cmds.Add)
 
 			local expanded = false
-			eventF.Expand.MouseButton1Down:Connect(function()
+			connect(eventF.Expand.MouseButton1Down, function()
 				expanded = not expanded
 				eventF:TweenSize(UDim2.new(1,0,0,20 + (expanded and 20*#eventF.Cmds.Holder:GetChildren() or 0)),Enum.EasingDirection.Out,Enum.EasingStyle.Quart,0.25,true)
 				eventF.Expand.Rotation = expanded and 90 or 0
@@ -2581,16 +2591,16 @@ eventEditor = (function()
 					table.insert(shade2,cmdF.Delete)
 					table.insert(shade2,cmdF.Settings)
 
-					cmdTextBox.FocusLost:Connect(function()
+					connect(cmdTextBox.FocusLost, function()
 						event.commands[i] = {cmdTextBox.Text,cmd[2],cmd[3]}
 						if onEdited then onEdited() end
 					end)
 
-					cmdF.Settings.MouseButton1Click:Connect(function()
+					connect(cmdF.Settings.MouseButton1Click, function()
 						openSettingsEditor(event,cmd)
 					end)
 
-					cmdF.Delete.MouseButton1Click:Connect(function()
+					connect(cmdF.Delete.MouseButton1Click, function()
 						table.remove(event.commands,i)
 						refreshCommands()
 						resizeList()
@@ -2609,7 +2619,8 @@ eventEditor = (function()
 
 			local newBox = eventF.Cmds.Add.TextBox
 			ViewportTextBox.convert(newBox)
-			newBox.FocusLost:Connect(function(enter)
+
+			connect(newBox.FocusLost, function(enter)
 				if enter then
 					event.commands[#event.commands+1] = {newBox.Text,defaultSettings(event),0}
 					newBox.Text = ""
@@ -2620,7 +2631,7 @@ eventEditor = (function()
 				end
 			end)
 
-			--eventF:GetPropertyChangedSignal("AbsoluteSize"):Connect(resizeList)
+			--connect(eventF:GetPropertyChangedSignal("AbsoluteSize"), resizeList)
 
 			eventF.Parent = eventListHolder
 
@@ -2657,7 +2668,7 @@ eventEditor = (function()
 		end
 	end
 
-	main.TopBar.Close.MouseButton1Click:Connect(function()
+	connect(main.TopBar.Close.MouseButton1Click, function()
 		main:TweenPosition(UDim2.new(0.5,-175,0,-500), "InOut", "Quart", 0.5, true, nil)
 	end)
 	dragGUI(main)
@@ -2792,7 +2803,7 @@ reference = (function()
 		{113,"TextLabel",{BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=1,Font=4,Name="Header",Parent={112},Position=UDim2.new(0,8,0,5),Size=UDim2.new(1,-8,0,20),Text="Get Further Help",TextColor3=Color3.new(1,1,1),TextSize=20,TextXAlignment=0,ZIndex=10,}},
 		{114,"TextLabel",{BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=1,Font=3,Name="Text",Parent={112},Position=UDim2.new(0,8,0,30),Size=UDim2.new(1,-8,0,32),Text="You can join the Discord server to get support with IY,  and read up on more documentation such as the Plugin API.",TextColor3=Color3.new(1,1,1),TextSize=14,TextWrapped=true,TextXAlignment=0,ZIndex=10,}},
 		{115,"Frame",{BackgroundColor3=Color3.new(0.1803921610117,0.1803921610117,0.1843137294054),BorderSizePixel=0,Name="Line",Parent={112},Position=UDim2.new(0,10,1,-1),Size=UDim2.new(1,-20,0,1),Visible=false,ZIndex=10,}},
-		{116,"TextButton",{BackgroundColor3=Color3.new(0.48627451062202,0.61960786581039,0.85098040103912),BorderColor3=Color3.new(0.1803921610117,0.1803921610117,0.1843137294054),Font=4,Name="InviteButton",Parent={112},Position=UDim2.new(0,5,0,75),Size=UDim2.new(1,-10,0,25),Text="Copy Discord Invite Link (https://discord.gg/78ZuWSq)",TextColor3=Color3.new(0.1803921610117,0.1803921610117,0.1843137294054),TextSize=16,ZIndex=10,}},
+		{116,"TextButton",{BackgroundColor3=Color3.new(0.48627451062202,0.61960786581039,0.85098040103912),BorderColor3=Color3.new(0.1803921610117,0.1803921610117,0.1843137294054),Font=4,Name="InviteButton",Parent={112},Position=UDim2.new(0,5,0,75),Size=UDim2.new(1,-10,0,25),Text="Copy Discord Invite Link (https://discord.gg/mqxKX5EXhU)",TextColor3=Color3.new(0.1803921610117,0.1803921610117,0.1843137294054),TextSize=16,ZIndex=10,}},
 	})
 	for i,v in pairs(main.Content.List:GetDescendants()) do
 		if v:IsA("TextLabel") then
@@ -2803,14 +2814,14 @@ reference = (function()
 	table.insert(shade1,main.Content)
 	table.insert(shade2,main.TopBar)
 	main.Name = randomString()
-	main.TopBar.Close.MouseButton1Click:Connect(function()
+	connect(main.TopBar.Close.MouseButton1Click, function()
 		main:TweenPosition(UDim2.new(0.5,-250,0,-500), "InOut", "Quart", 0.5, true, nil)
 	end)
 	local inviteButton = main:FindFirstChild("InviteButton",true)
 	local lastPress = nil
-	inviteButton.MouseButton1Click:Connect(function()
+	connect(inviteButton.MouseButton1Click, function()
 		if everyClipboard then
-			toClipboard("https://discord.gg/78ZuWSq")
+			toClipboard("https://discord.gg/mqxKX5EXhU")
 			inviteButton.Text = "Copied"
 		else
 			inviteButton.Text = "No Clipboard Function, type out the link"
@@ -2819,12 +2830,12 @@ reference = (function()
 		lastPress = pressTime
 		wait(2)
 		if lastPress ~= pressTime then return end
-		inviteButton.Text = "Copy Discord Invite Link (https://discord.gg/78ZuWSq)"
+		inviteButton.Text = "Copy Discord Invite Link (https://discord.gg/mqxKX5EXhU)"
 	end)
 	dragGUI(main)
 	main.Parent = ScaledHolder
 
-	ReferenceButton.MouseButton1Click:Connect(function()
+	connect(ReferenceButton.MouseButton1Click, function()
 		main:TweenPosition(UDim2.new(0.5,-250,0.5,-150), "InOut", "Quart", 0.5, true, nil)
 	end)
 end)()
@@ -2950,7 +2961,7 @@ createPopup = function(text)
 	ExitImage.Image = "rbxassetid://5054663650"
 	ExitImage.ZIndex = 10
 
-	Exit.MouseButton1Click:Connect(function()
+	connect(Exit.MouseButton1Click, function()
 		FileError:Destroy()
 	end)
 end
@@ -3136,7 +3147,7 @@ function notify(text,text2,length)
 		local notificationPinned = false
 		notifyCount = notifyCount+1
 		if pinNotification then pinNotification:Disconnect() end
-		pinNotification = PinButton.MouseButton1Click:Connect(function()
+		pinNotification = connect(PinButton.MouseButton1Click, function()
 			task.spawn(function()
 				pinNotification:Disconnect()
 				notificationPinned = true
@@ -3156,7 +3167,7 @@ function notify(text,text2,length)
 			Text_2.Text = text
 		end
 		Notification:TweenPosition(UDim2.new(1, Notification.Position.X.Offset, 1, -100), "InOut", "Quart", 0.5, true, nil)
-		CloseButton.MouseButton1Click:Connect(function()
+		connect(CloseButton.MouseButton1Click, function()
 			Notification:TweenPosition(UDim2.new(1, Notification.Position.X.Offset, 1, 0), "InOut", "Quart", 0.5, true, nil)
 			closepressed = true
 			pinNotification:Disconnect()
@@ -3276,18 +3287,18 @@ function CreateJoinLabel(plr,ID)
 	ImageLabel_3.Image = Players:GetUserThumbnailAsync(ID, Enum.ThumbnailType.AvatarThumbnail, Enum.ThumbnailSize.Size420x420)
 	scroll_3.CanvasSize = UDim2.new(0, 0, 0, listlayout.AbsoluteContentSize.Y)
 	scroll_3.CanvasPosition = Vector2.new(0,scroll_2.CanvasPosition.Y+infoFrame.AbsoluteSize.Y)
-	
+
 	wait()
 
 	local success, user = pcall(function()
 		return game:HttpGet("https://users.roblox.com/v1/users/" .. ID)
 	end)
-	
+
 	if success and user then
 		local successDecode, json = pcall(function()
 			return HttpService:JSONDecode(user)
 		end)
-	
+
 		if successDecode and json and json["created"] then
 			local date = json["created"]:sub(1, 10)
 			local splitDates = string.split(date, "-")
@@ -3300,8 +3311,8 @@ function CreateJoinLabel(plr,ID)
 	end	
 end
 
-IYMouse.KeyDown:Connect(function(Key)
-	if (Key==prefix) then
+connect(IYMouse.KeyDown, function(Key)
+	if (Key == prefix) then
 		RunService.RenderStepped:Wait()
 		Cmdbar:CaptureFocus()
 		maximizeHolder()
@@ -3309,12 +3320,12 @@ IYMouse.KeyDown:Connect(function(Key)
 end)
 
 local lastMinimizeReq = 0
-Holder.MouseEnter:Connect(function()
+connect(Holder.MouseEnter, function()
 	lastMinimizeReq = 0
 	maximizeHolder()
 end)
 
-Holder.MouseLeave:Connect(function()
+connect(Holder.MouseLeave, function()
 	if not Cmdbar:IsFocused() then
 		local reqTime = tick()
 		lastMinimizeReq = reqTime
@@ -3366,7 +3377,7 @@ end
 local picker
 local colorpickerOpen = false
 
-ColorsButton.MouseButton1Click:Connect(function()
+connect(ColorsButton.MouseButton1Click, function()
 	local cache_currentShade1 = currentShade1
 	local cache_currentShade2 = currentShade2
 	local cache_currentShade3 = currentShade3
@@ -3384,6 +3395,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 		picker.ZIndex = 10
 		picker.BackgroundColor3 = Color3.new(1, 1, 1)
 		picker.Size = UDim2.new(0, 450, 0, 20)
+		table.insert(instances, picker)
 
 		local colorPicker = Instance.new("Frame")
 		colorPicker.Name = "ColorPicker"
@@ -4820,7 +4832,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 				end
 
 				local function hookButtons(frame,func)
-					frame.ArrowFrame.Up.InputBegan:Connect(function(input)
+					connect(frame.ArrowFrame.Up.InputBegan, function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Up.BackgroundTransparency = 0.5
 						elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -4831,7 +4843,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 							if not startNum then return end
 
-							releaseEvent = UserInputService.InputEnded:Connect(function(input)
+							releaseEvent = connect(UserInputService.InputEnded, function(input)
 								if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 								releaseEvent:Disconnect()
 								pressing = false
@@ -4849,13 +4861,13 @@ ColorsButton.MouseButton1Click:Connect(function()
 						end
 					end)
 
-					frame.ArrowFrame.Up.InputEnded:Connect(function(input)
+					connect(frame.ArrowFrame.Up.InputEnded, function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Up.BackgroundTransparency = 1
 						end
 					end)
 
-					frame.ArrowFrame.Down.InputBegan:Connect(function(input)
+					connect(frame.ArrowFrame.Down.InputBegan, function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Down.BackgroundTransparency = 0.5
 						elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -4866,7 +4878,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 
 							if not startNum then return end
 
-							releaseEvent = UserInputService.InputEnded:Connect(function(input)
+							releaseEvent = connect(UserInputService.InputEnded, function(input)
 								if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 								releaseEvent:Disconnect()
 								pressing = false
@@ -4884,24 +4896,24 @@ ColorsButton.MouseButton1Click:Connect(function()
 						end
 					end)
 
-					frame.ArrowFrame.Down.InputEnded:Connect(function(input)
+					connect(frame.ArrowFrame.Down.InputEnded, function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							frame.ArrowFrame.Down.BackgroundTransparency = 1
 						end
 					end)
 				end
 
-				colorSpace.InputBegan:Connect(function(input)
+				connect(colorSpace.InputBegan, function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						local releaseEvent,mouseEvent
 
-						releaseEvent = UserInputService.InputEnded:Connect(function(input)
+						releaseEvent = connect(UserInputService.InputEnded, function(input)
 							if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 							releaseEvent:Disconnect()
 							mouseEvent:Disconnect()
 						end)
 
-						mouseEvent = UserInputService.InputChanged:Connect(function(input)
+						mouseEvent = connect(UserInputService.InputChanged, function(input)
 							if input.UserInputType == Enum.UserInputType.MouseMovement then
 								colorSpaceInput()
 							end
@@ -4911,17 +4923,17 @@ ColorsButton.MouseButton1Click:Connect(function()
 					end
 				end)
 
-				colorStrip.InputBegan:Connect(function(input)
+				connect(colorStrip.InputBegan, function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						local releaseEvent,mouseEvent
 
-						releaseEvent = UserInputService.InputEnded:Connect(function(input)
+						releaseEvent = connect(UserInputService.InputEnded, function(input)
 							if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 							releaseEvent:Disconnect()
 							mouseEvent:Disconnect()
 						end)
 
-						mouseEvent = UserInputService.InputChanged:Connect(function(input)
+						mouseEvent = connect(UserInputService.InputChanged, function(input)
 							if input.UserInputType == Enum.UserInputType.MouseMovement then
 								colorStripInput()
 							end
@@ -4941,7 +4953,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				hueInput.FocusLost:Connect(function() 
+				connect(hueInput.FocusLost, function() 
 					updateHue(hueInput.Text) 
 				end) 
 				hookButtons(hueInput,updateHue)
@@ -4956,7 +4968,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				satInput.FocusLost:Connect(function() 
+				connect(satInput.FocusLost, function() 
 					updateSat(satInput.Text) 
 				end) 
 				hookButtons(satInput,updateSat)
@@ -4971,7 +4983,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 						updateColor(1)
 					end
 				end
-				valInput.FocusLost:Connect(function() 
+				connect(valInput.FocusLost, function() 
 					updateVal(valInput.Text) 
 				end) 
 				hookButtons(valInput,updateVal)
@@ -4981,12 +4993,12 @@ ColorsButton.MouseButton1Click:Connect(function()
 					if num then
 						red = math.clamp(math.floor(num),0,255)/255
 						local newColor = Color3.new(red,green,blue)
-						hue,sat,val = Color3.toHSV(newColor)
+						hue,sat,val = newColor:ToHSV()
 						redInput.Text = tostring(red*255)
 						updateColor(2)
 					end
 				end
-				redInput.FocusLost:Connect(function() 
+				connect(redInput.FocusLost, function() 
 					updateRed(redInput.Text) 
 				end)
 				hookButtons(redInput,updateRed)
@@ -4996,12 +5008,12 @@ ColorsButton.MouseButton1Click:Connect(function()
 					if num then
 						green = math.clamp(math.floor(num),0,255)/255
 						local newColor = Color3.new(red,green,blue)
-						hue,sat,val = Color3.toHSV(newColor)
+						hue,sat,val = newColor:ToHSV()
 						greenInput.Text = tostring(green*255)
 						updateColor(2)
 					end
 				end
-				greenInput.FocusLost:Connect(function() 
+				connect(greenInput.FocusLost, function() 
 					updateGreen(greenInput.Text) 
 				end) 
 				hookButtons(greenInput,updateGreen)
@@ -5011,12 +5023,12 @@ ColorsButton.MouseButton1Click:Connect(function()
 					if num then
 						blue = math.clamp(math.floor(num),0,255)/255
 						local newColor = Color3.new(red,green,blue)
-						hue,sat,val = Color3.toHSV(newColor)
+						hue,sat,val = newColor:ToHSV()
 						blueInput.Text = tostring(blue*255)
 						updateColor(2)
 					end
 				end
-				blueInput.FocusLost:Connect(function() 
+				connect(blueInput.FocusLost, function() 
 					updateBlue(blueInput.Text) 
 				end) 
 				hookButtons(blueInput,updateBlue)
@@ -5037,7 +5049,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 					newColor.BackgroundColor3 = v
 					newColor.Position = UDim2.fromOffset(1 + 30 * column, 21 + 23 * row)
 
-					newColor.MouseButton1Click:Connect(function()
+					connect(newColor.MouseButton1Click, function()
 						red, green, blue = v.R, v.G, v.B
 						local newColor = Color3.new(red, green, blue)
 						hue, sat, val = newColor:ToHSV()
@@ -5060,14 +5072,14 @@ ColorsButton.MouseButton1Click:Connect(function()
 					newColor.BackgroundColor3 = color
 					newColor.Position = UDim2.new(0,1 + 30*column,0,20 + 23*row)
 
-					newColor.MouseButton1Click:Connect(function()
+					connect(newColor.MouseButton1Click, function()
 						local curColor = customColorsList[i] or Color3.new(0,0,0)
 						red,green,blue = curColor.r,curColor.g,curColor.b
 						hue,sat,val = curColor:ToHSV()
 						updateColor()
 					end)
 
-					newColor.MouseButton2Click:Connect(function()
+					connect(newColor.MouseButton2Click, function()
 						customColorsList[i] = chosenColor
 						newColor.BackgroundColor3 = chosenColor
 					end)
@@ -5080,42 +5092,39 @@ ColorsButton.MouseButton1Click:Connect(function()
 					end
 				end
 
-				shade1Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,shade1) end end)
-				shade1Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade1Button.BackgroundTransparency = 0.4 end end)
-				shade1Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade1Button.BackgroundTransparency = 0 end end)
+				connect(shade1Button.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor,shade1) end end)
+				connect(shade1Button.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade1Button.BackgroundTransparency = 0.4 end end)
+				connect(shade1Button.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade1Button.BackgroundTransparency = 0 end end)
 
-				shade2Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor,shade2) end end)
-				shade2Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0.4 end end)
-				shade2Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0 end end)
+				connect(shade2Button.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor,shade2) end end)
+				connect(shade2Button.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0.4 end end)
+				connect(shade2Button.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade2Button.BackgroundTransparency = 0 end end)
 
-				shade3Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, shade3) end end)
-				shade3Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0.4 end end)
-				shade3Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0 end end)
+				connect(shade3Button.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor, shade3) end end)
+				connect(shade3Button.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0.4 end end)
+				connect(shade3Button.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then shade3Button.BackgroundTransparency = 0 end end)
 
-				text1Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, text1) end end)
-				text1Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0.4 end end)
-				text1Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0 end end)
+				connect(text1Button.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor, text1) end end)
+				connect(text1Button.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0.4 end end)
+				connect(text1Button.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text1Button.BackgroundTransparency = 0 end end)
 
-				text2Button.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, text2) end end)
-				text2Button.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0.4 end end)
-				text2Button.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0 end end)
+				connect(text2Button.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor, text2) end end)
+				connect(text2Button.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0.4 end end)
+				connect(text2Button.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then text2Button.BackgroundTransparency = 0 end end)
 
-				scrollButton.MouseButton1Click:Connect(function() if newMt.Confirm then newMt:Confirm(chosenColor, scroll) end end)
-				scrollButton.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0.4 end end)
-				scrollButton.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0 end end)
+				connect(scrollButton.MouseButton1Click, function() if newMt.Confirm then newMt:Confirm(chosenColor, scroll) end end)
+				connect(scrollButton.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0.4 end end)
+				connect(scrollButton.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then scrollButton.BackgroundTransparency = 0 end end)
 
-				cancel.MouseButton1Click:Connect(function() if newMt.Cancel then newMt:Cancel() end end)
-				cancel.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0.4 end end)
-				cancel.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0 end end)
+				connect(cancel.MouseButton1Click, function() if newMt.Cancel then newMt:Cancel() end end)
+				connect(cancel.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0.4 end end)
+				connect(cancel.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then cancel.BackgroundTransparency = 0 end end)
 
-				default.MouseButton1Click:Connect(function() if newMt.Default then newMt:Default() end end)
-				default.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0.4 end end)
-				default.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0 end end)
+				connect(default.MouseButton1Click, function() if newMt.Default then newMt:Default() end end)
+				connect(default.InputBegan, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0.4 end end)
+				connect(default.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then default.BackgroundTransparency = 0 end end)
 
-				exit.MouseButton1Click:Connect(function()
-					picker:TweenPosition(UDim2.new(0.5, -219, 0, -500), "InOut", "Quart", 0.5, true, nil)
-				end)
-
+				connect(exit.MouseButton1Click, function() picker:TweenPosition(UDim2.new(0.5, -219, 0, -500), "InOut", "Quart", 0.5, true, nil)end)
 				updateColor()
 
 				function newMt.SetColor(self, color)
@@ -5164,7 +5173,7 @@ ColorsButton.MouseButton1Click:Connect(function()
 end)
 
 
-SettingsButton.MouseButton1Click:Connect(function()
+connect(SettingsButton.MouseButton1Click, function()
 	if SettingsOpen == false then SettingsOpen = true
 		Settings:TweenPosition(UDim2.new(0, 0, 0, 45), "InOut", "Quart", 0.5, true, nil)
 		CMDsF.Visible = false
@@ -5174,7 +5183,7 @@ SettingsButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-On.MouseButton1Click:Connect(function()
+connect(On.MouseButton1Click, function()
 	if isHidden == false then
 		if StayOpen == false then
 			StayOpen = true
@@ -5187,21 +5196,21 @@ On.MouseButton1Click:Connect(function()
 	end
 end)
 
-Clear.MouseButton1Down:Connect(function()
+connect(Clear.MouseButton1Down, function()
 	for _, child in pairs(scroll_2:GetChildren()) do
 		child:Destroy()
 	end
 	scroll_2.CanvasSize = UDim2.new(0, 0, 0, 10)
 end)
 
-Clear_2.MouseButton1Down:Connect(function()
+connect(Clear_2.MouseButton1Down, function()
 	for _, child in pairs(scroll_3:GetChildren()) do
 		child:Destroy()
 	end
 	scroll_3.CanvasSize = UDim2.new(0, 0, 0, 10)
 end)
 
-Toggle.MouseButton1Down:Connect(function()
+connect(Toggle.MouseButton1Down, function()
 	if logsEnabled then
 		logsEnabled = false
 		Toggle.Text = 'Disabled'
@@ -5213,7 +5222,7 @@ Toggle.MouseButton1Down:Connect(function()
 	end
 end)
 
-Toggle_2.MouseButton1Down:Connect(function()
+connect(Toggle_2.MouseButton1Down, function()
 	if jLogsEnabled then
 		jLogsEnabled = false
 		Toggle_2.Text = 'Disabled'
@@ -5225,7 +5234,7 @@ Toggle_2.MouseButton1Down:Connect(function()
 	end
 end)
 
-selectChat.MouseButton1Down:Connect(function()
+connect(selectChat.MouseButton1Down, function()
 	join.Visible = false
 	chat.Visible = true
 	table.remove(shade3,table.find(shade3,selectChat))
@@ -5236,7 +5245,7 @@ selectChat.MouseButton1Down:Connect(function()
 	selectChat.BackgroundColor3 = currentShade2
 end)
 
-selectJoin.MouseButton1Down:Connect(function()
+connect(selectJoin.MouseButton1Down, function()
 	chat.Visible = false
 	join.Visible = true	
 	table.remove(shade3,table.find(shade3,selectJoin))
@@ -5270,7 +5279,7 @@ function sendChatWebhook(player, message)
 end
 
 ChatLog = function(player)
-	player.Chatted:Connect(function(message)
+	connect(player.Chatted, function(message)
 		if logsEnabled == true then
 			CreateLabel(player.Name, message)
 			sendChatWebhook(player, message)
@@ -5288,7 +5297,7 @@ CleanFileName = function(name)
 	return tostring(name):gsub("[*\\?:<>|]+", ""):sub(1, 175)
 end
 
-SaveChatlogs.MouseButton1Down:Connect(function()
+connect(SaveChatlogs.MouseButton1Down, function()
 	if writefileExploit() then
 		if #scroll_2:GetChildren() > 0 then
 			notify("Loading",'Hold on a sec')
@@ -5323,7 +5332,7 @@ if isLegacyChat then
 	end
 end
 
-Players.PlayerRemoving:Connect(function(player)
+connect(Players.PlayerRemoving, function(player)
 	if ESPenabled or CHMSenabled or COREGUI:FindFirstChild(player.Name..'_LC') then
 		for i,v in pairs(COREGUI:GetChildren()) do
 			if v.Name == player.Name..'_ESP' or v.Name == player.Name..'_LC' or v.Name == player.Name..'_CHMS' then
@@ -5332,7 +5341,7 @@ Players.PlayerRemoving:Connect(function(player)
 		end
 	end
 	if viewing ~= nil and player == viewing then
-		workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
+		camera.CameraSubject = LocalPlayer.Character
 		viewing = nil
 		if viewDied then
 			viewDied:Disconnect()
@@ -5343,11 +5352,11 @@ Players.PlayerRemoving:Connect(function(player)
 	eventEditor.FireEvent("OnLeave", player.Name)
 end)
 
-Exit.MouseButton1Down:Connect(function()
+connect(Exit.MouseButton1Down, function()
 	logs:TweenPosition(UDim2.new(0, 0, 1, 10), "InOut", "Quart", 0.3, true, nil)
 end)
 
-Hide.MouseButton1Down:Connect(function()
+connect(Hide.MouseButton1Down, function()
 	if logs.Position ~= UDim2.new(0, 0, 1, -20) then
 		logs:TweenPosition(UDim2.new(0, 0, 1, -20), "InOut", "Quart", 0.3, true, nil)
 	else
@@ -5355,55 +5364,55 @@ Hide.MouseButton1Down:Connect(function()
 	end
 end)
 
-EventBind.MouseButton1Click:Connect(function()
+connect(EventBind.MouseButton1Click, function()
 	eventEditor.Frame:TweenPosition(UDim2.new(0.5,-175,0.5,-101), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Keybinds.MouseButton1Click:Connect(function()
+connect(Keybinds.MouseButton1Click, function()
 	KeybindsFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 	wait(0.5)
 	SettingsHolder.Visible = false
 end)
 
-Close.MouseButton1Click:Connect(function()
+connect(Close.MouseButton1Click, function()
 	SettingsHolder.Visible = true
 	KeybindsFrame:TweenPosition(UDim2.new(0, 0, 0, 175), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Keybinds.MouseButton1Click:Connect(function()
+connect(Keybinds.MouseButton1Click, function()
 	KeybindsFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 	wait(0.5)
 	SettingsHolder.Visible = false
 end)
 
-Add.MouseButton1Click:Connect(function()
+connect(Add.MouseButton1Click, function()
 	KeybindEditor:TweenPosition(UDim2.new(0.5, -180, 0, 260), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Delete.MouseButton1Click:Connect(function()
+connect(Delete.MouseButton1Click, function()
 	binds = {}
 	refreshbinds()
 	updatesaves()
 	notify('Keybinds Updated','Removed all keybinds')
 end)
 
-Close_2.MouseButton1Click:Connect(function()
+connect(Close_2.MouseButton1Click, function()
 	SettingsHolder.Visible = true
 	AliasesFrame:TweenPosition(UDim2.new(0, 0, 0, 175), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Aliases.MouseButton1Click:Connect(function()
+connect(Aliases.MouseButton1Click, function()
 	AliasesFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 	wait(0.5)
 	SettingsHolder.Visible = false
 end)
 
-Close_3.MouseButton1Click:Connect(function()
+connect(Close_3.MouseButton1Click, function()
 	SettingsHolder.Visible = true
 	PositionsFrame:TweenPosition(UDim2.new(0, 0, 0, 175), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Positions.MouseButton1Click:Connect(function()
+connect(Positions.MouseButton1Click, function()
 	PositionsFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 	wait(0.5)
 	SettingsHolder.Visible = false
@@ -5432,21 +5441,21 @@ function selectPart()
 			selectionBox.Adornee = nil
 		end
 	end
-	ActivateHighlight = IYMouse.Move:Connect(HighlightPart)
+	ActivateHighlight = connect(IYMouse.Move, HighlightPart)
 	local function SelectPart()
 		if IYMouse.Target ~= nil then
 			selected.Adornee = IYMouse.Target
 			Path.Text = getHierarchy(IYMouse.Target)
 		end
 	end
-	ClickSelect = IYMouse.Button1Down:Connect(SelectPart)
+	ClickSelect = connect(IYMouse.Button1Down, SelectPart)
 end
 
-Part.MouseButton1Click:Connect(function()
+connect(Part.MouseButton1Click, function()
 	selectPart()
 end)
 
-Exit_4.MouseButton1Click:Connect(function()
+connect(Exit_4.MouseButton1Click, function()
 	ToPartFrame:TweenPosition(UDim2.new(0.5, -180, 0, -500), "InOut", "Quart", 0.5, true, nil)
 	if ActivateHighlight then
 		ActivateHighlight:Disconnect()
@@ -5459,7 +5468,7 @@ Exit_4.MouseButton1Click:Connect(function()
 	Path.Text = ""
 end)
 
-CopyPath.MouseButton1Click:Connect(function()
+connect(CopyPath.MouseButton1Click, function()
 	if Path.Text ~= "" then
 		toClipboard(Path.Text)
 	else
@@ -5467,7 +5476,7 @@ CopyPath.MouseButton1Click:Connect(function()
 	end
 end)
 
-ChoosePart.MouseButton1Click:Connect(function()
+connect(ChoosePart.MouseButton1Click, function()
 	if Path.Text ~= "" then
 		local tpNameExt = ''
 		local function handleWpNames()
@@ -5499,7 +5508,7 @@ end)
 cmds={}
 customAlias = {}
 
-Delete_3.MouseButton1Click:Connect(function()
+connect(Delete_3.MouseButton1Click, function()
 	customAlias = {}
 	aliases = {}
 	notify('Aliases Modified','Removed all aliases')
@@ -5507,48 +5516,21 @@ Delete_3.MouseButton1Click:Connect(function()
 	refreshaliases()
 end)
 
-PrefixBox:GetPropertyChangedSignal("Text"):Connect(function()
+connect(PrefixBox:GetPropertyChangedSignal("Text"), function()
 	prefix = PrefixBox.Text
 	Cmdbar.PlaceholderText = "Command Bar ("..prefix..")"
 	updatesaves()
 end)
 
-function UpdateToViewport()
-	if Holder.Position.X.Offset < -CamViewport() then
-		Holder:TweenPosition(UDim2.new(1, -CamViewport(), Holder.Position.Y.Scale, Holder.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
-		Notification:TweenPosition(UDim2.new(1, -CamViewport() + 250, Notification.Position.Y.Scale, Notification.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
-	end
-end
-
-local camera_changed, camera_moved
-
-function updateCamera(child, parent)
-	if parent ~= workspace then
-		if camera_moved and typeof(camera_moved) == 'RBXScriptConnection' then
-			camera_moved:Disconnect()
-		end
-		if camera_changed and typeof(camera_changed) == 'RBXScriptConnection' then
-			camera_changed:Disconnect()
-		end
-		local startTime = tick()
-		while not workspace.CurrentCamera do
-			if tick() - startTime > 5 then break end
-			task.wait()
-		end
-		bindToCamera()
-	end
-end
-
-local function bindToCamera()
-	local camera = workspace.CurrentCamera
+function update2viewport()
 	if camera then
-		camera_changed = camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateToViewport)
-		camera_moved = camera.AncestryChanged:Connect(updateCamera)
+		local viewportX = camera.ViewportSize.X
+		if type(viewportX) == 'number' and Holder.Position.X.Offset < -viewportX then
+			Holder:TweenPosition(UDim2.new(1, -viewportX, Holder.Position.Y.Scale, Holder.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
+			Notification:TweenPosition(UDim2.new(1, -viewportX + 250, Notification.Position.Y.Scale, Notification.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
+		end
 	end
 end
-
-bindToCamera()
-workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(bindToCamera)
 
 function dragMain(dragpoint,gui)
 	task.spawn(function()
@@ -5559,50 +5541,53 @@ function dragMain(dragpoint,gui)
 		local function update(input)
 			local pos = -250
 			local delta = input.Position - dragStart
-			if startPos.X.Offset + delta.X <= -500 then
-				local Position = UDim2.new(1, -250, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
-				TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position}):Play()
-				pos = 250
-			else
-				local Position = UDim2.new(1, -500, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
-				TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position}):Play()
-				pos = -250
-			end
-			if startPos.X.Offset + delta.X <= -250 and -CamViewport() <= startPos.X.Offset + delta.X then
-				local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, gui.Position.Y.Scale, gui.Position.Y.Offset)
-				TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
-				local Position2 = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X + pos, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
-				TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position2}):Play()
-			elseif startPos.X.Offset + delta.X > -500 then
-				local Position = UDim2.new(1, -250, gui.Position.Y.Scale, gui.Position.Y.Offset)
-				TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
-			elseif -CamViewport() > startPos.X.Offset + delta.X then
-				gui:TweenPosition(UDim2.new(1, -CamViewport(), gui.Position.Y.Scale, gui.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
-				local Position = UDim2.new(1, -CamViewport(), gui.Position.Y.Scale, gui.Position.Y.Offset)
-				TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
-				local Position2 = UDim2.new(1, -CamViewport() + 250, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
-				TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position2}):Play()
+			if camera then
+				local viewportX = camera.ViewportSize.X
+				if startPos.X.Offset + delta.X <= -500 then
+					local Position = UDim2.new(1, -250, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
+					TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position}):Play()
+					pos = 250
+				else
+					local Position = UDim2.new(1, -500, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
+					TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position}):Play()
+					pos = -250
+				end
+				if startPos.X.Offset + delta.X <= -250 and -viewportX <= startPos.X.Offset + delta.X then
+					local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, gui.Position.Y.Scale, gui.Position.Y.Offset)
+					TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+					local Position2 = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X + pos, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
+					TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position2}):Play()
+				elseif startPos.X.Offset + delta.X > -500 then
+					local Position = UDim2.new(1, -250, gui.Position.Y.Scale, gui.Position.Y.Offset)
+					TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+				elseif -viewportX > startPos.X.Offset + delta.X then
+					gui:TweenPosition(UDim2.new(1, -viewportX, gui.Position.Y.Scale, gui.Position.Y.Offset), "InOut", "Quart", 0.04, true, nil)
+					local Position = UDim2.new(1, -viewportX, gui.Position.Y.Scale, gui.Position.Y.Offset)
+					TweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+					local Position2 = UDim2.new(1, -viewportX + 250, Notification.Position.Y.Scale, Notification.Position.Y.Offset)
+					TweenService:Create(Notification, TweenInfo.new(.20), {Position = Position2}):Play()
+				end
 			end
 		end
-		dragpoint.InputBegan:Connect(function(input)
+		connect(dragpoint.InputBegan, function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				dragging = true
 				dragStart = input.Position
 				startPos = gui.Position
 
-				input.Changed:Connect(function()
+				connect(input.Changed, function()
 					if input.UserInputState == Enum.UserInputState.End then
 						dragging = false
 					end
 				end)
 			end
 		end)
-		dragpoint.InputChanged:Connect(function(input)
+		connect(dragpoint.InputChanged, function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 				dragInput = input
 			end
 		end)
-		UserInputService.InputChanged:Connect(function(input)
+		connect(UserInputService.InputChanged, function(input)
 			if input == dragInput and dragging then
 				update(input)
 			end
@@ -5675,8 +5660,7 @@ task.spawn(function()
 		local function chatboxFocused()
 			canvasPos = CMDsF.CanvasPosition
 		end
-		local chatboxFocusedC = chatbox.Focused:Connect(chatboxFocused)
-
+		local chatboxFocusedC = connect(chatbox.Focused, chatboxFocused)
 		local function Index()
 			if chatbox.Text:lower():sub(1,1) == prefix then
 				if SettingsOpen == true then
@@ -5694,8 +5678,7 @@ task.spawn(function()
 				end
 			end
 		end
-		local chatboxFunc = chatbox:GetPropertyChangedSignal("Text"):Connect(Index)
-
+		local chatboxFunc = connect(chatbox:GetPropertyChangedSignal("Text"), Index)
 		local function chatboxFocusLost(enterpressed)
 			if not enterpressed or chatbox.Text:lower():sub(1,1) ~= prefix then
 				IndexContents('',true)
@@ -5703,18 +5686,17 @@ task.spawn(function()
 			CMDsF.CanvasPosition = canvasPos
 			minimizeHolder()
 		end
-		local chatboxFocusLostC = chatbox.FocusLost:Connect(chatboxFocusLost)
-
-		PlayerGui:WaitForChild("Chat").Frame.ChatBarParentFrame.ChildAdded:Connect(function(newbar)
+		local chatboxFocusLostC = connect(chatbox.FocusLost, chatboxFocusLost)
+		connect(PlayerGui:WaitForChild("Chat").Frame.ChatBarParentFrame.ChildAdded, function(newbar)
 			wait()
 			if newbar:FindFirstChild('BoxFrame') then
 				chatbox = PlayerGui:WaitForChild("Chat").Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
 				if chatboxFocusedC then chatboxFocusedC:Disconnect() end
-				chatboxFocusedC = chatbox.Focused:Connect(chatboxFocused)
+				chatboxFocusedC = connect(chatbox.Focused, chatboxFocused)
 				if chatboxFunc then chatboxFunc:Disconnect() end
-				chatboxFunc = chatbox:GetPropertyChangedSignal("Text"):Connect(Index)
+				chatboxFunc = connect(chatbox:GetPropertyChangedSignal("Text"), Index)
 				if chatboxFocusLostC then chatboxFocusLostC:Disconnect() end
-				chatboxFocusLostC = chatbox.FocusLost:Connect(chatboxFocusLost)
+				chatboxFocusLostC = connect(chatbox.FocusLost, chatboxFocusLost)
 			end
 		end)
 		--else
@@ -5784,8 +5766,7 @@ function refreshCommandList()
 			if type(info.description) == "string" and info.description ~= "" then
 				newcmd:SetAttribute("Title", cmdText)
 				newcmd:SetAttribute("Desc", info.description)
-
-				newcmd.MouseButton1Click:Connect(function()
+				connect(newcmd.MouseButton1Click, function()
 					if not IsOnMobile and newcmd.Visible and newcmd.TextTransparency == 0 then
 						local currentText = Cmdbar.Text
 						Cmdbar:CaptureFocus()
@@ -5822,7 +5803,9 @@ function checkTT()
 		return
 	end
 
-	local viewportSize = CamViewportSize()
+	local viewportSize = select(2, pcall(function()
+		return camera.ViewportSize
+	end))
 	if typeof(viewportSize) ~= "Vector2" then return end
 
 	Tooltip.Visible = true
@@ -5835,11 +5818,9 @@ function checkTT()
 	local baseOffset = 10
 	local scaledOffset = baseOffset / Scale.Scale
 
-	-- Calculate position relative to mouse
 	local newX = mouseX + scaledOffset
 	local newY = mouseY + scaledOffset
 
-	-- Clamp to viewport bounds
 	newX = math.clamp(newX, 0, viewportSize.X - tooltipWidth)
 	newY = math.clamp(newY, 0, viewportSize.Y - tooltipHeight)
 
@@ -5896,11 +5877,10 @@ function refresh(plr)
 	refreshCmd = true
 	local Human = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid", true)
 	local pos = Human and Human.RootPart and Human.RootPart.CFrame
-	local pos1 = workspace.CurrentCamera.CFrame
+	local pos1 = camera.CFrame
 	respawn(plr)
 	task.spawn(function()
-		plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, 
-		workspace.CurrentCamera.CFrame = pos, wait() and pos1
+		plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, camera.CFrame = pos, wait() and pos1
 		refreshCmd = false
 	end)
 end
@@ -5910,7 +5890,7 @@ local lastDeath
 function onDied()
 	task.spawn(function()
 		if pcall(function() LocalPlayer.Character:FindFirstChildOfClass('Humanoid') end) and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
-			LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+			connect(LocalPlayer.Character:FindFirstChildOfClass('Humanoid').Died, function()
 				if getRoot(LocalPlayer.Character) then
 					lastDeath = getRoot(LocalPlayer.Character).CFrame
 				end
@@ -5924,7 +5904,8 @@ end
 
 Clip = true
 spDelay = 0.1
-LocalPlayer.CharacterAdded:Connect(function()
+
+connect(LocalPlayer.CharacterAdded, function()
 	NOFLY()
 	Floating = false
 
@@ -6053,7 +6034,7 @@ function execCmd(cmdStr,speaker,store)
 				if infTimes then
 					while lastBreakTime < cmdStartTime do
 						local success,err = pcall(cmd.callback,args, speaker)
-						if not success and env.IY_DEBUG then
+						if not success then
 							warn("Command Error:", cmdName, err)
 						end
 						wait(cmdDelay)
@@ -6064,7 +6045,7 @@ function execCmd(cmdStr,speaker,store)
 						local success,err = pcall(function()
 							cmd.callback(args, speaker)
 						end)
-						if not success and env.IY_DEBUG then
+						if not success then
 							warn("Command Error:", cmdName, err)
 						end
 						if cmdDelay ~= 0 then wait(cmdDelay) end
@@ -6083,7 +6064,7 @@ function removeCommand(cmd)
 				for a,c in pairs(CMDsF:GetChildren()) do
 					if string.find(c.Text, "^"..cmd.."$") or string.find(c.Text, "^"..cmd.." ") or string.find(c.Text, " "..cmd.."$") or string.find(c.Text, " "..cmd.." ") then
 						c.TextTransparency = 0.7
-						c.MouseButton1Click:Connect(function()
+						connect(c.MouseButton1Click, function()
 							notify(c.Text, "Command has been disabled by you or a plugin")
 						end)
 					end
@@ -6124,7 +6105,7 @@ function addcmdtext(text,name,desc)
 	if desc and desc ~= '' then
 		newcmd:SetAttribute("Title", tooltipText)
 		newcmd:SetAttribute("Desc", tooltipDesc)
-		newcmd.MouseButton1Down:Connect(function()
+		connect(newcmd.MouseButton1Down, function()
 			if newcmd.Visible and newcmd.TextTransparency == 0 then
 				Cmdbar:CaptureFocus()
 				autoComplete(newcmd.Text)
@@ -6135,7 +6116,7 @@ function addcmdtext(text,name,desc)
 end
 
 local WorldToScreen = function(Object)
-	local ObjectVector = workspace.CurrentCamera:WorldToScreenPoint(Object.Position)
+	local ObjectVector = camera:WorldToScreenPoint(Object.Position)
 	return Vector2.new(ObjectVector.X, ObjectVector.Y)
 end
 
@@ -6281,7 +6262,7 @@ SpecialPlayerCases = {
 	["age(%d+)"] = function(speaker,args)
 		local returns = {}
 		local age = tonumber(args[1])
-		if not age == nil then return end
+		if age ~= nil then return end
 		for _,plr in pairs(Players:GetPlayers()) do
 			if plr.AccountAge <= age then
 				table.insert(returns,plr)
@@ -6545,18 +6526,21 @@ end
 
 lastTextBoxString,lastTextBoxCon,lastEnteredString = nil,nil,nil
 
-UserInputService.TextBoxFocused:Connect(function(obj)
+connect(UserInputService.TextBoxFocused, function(obj)
 	if lastTextBoxCon then lastTextBoxCon:Disconnect() end
-	if obj == Cmdbar then lastTextBoxString = nil return end
+	if obj == Cmdbar then
+		lastTextBoxString = nil 
+		return 
+	end
 	lastTextBoxString = obj.Text
-	lastTextBoxCon = obj:GetPropertyChangedSignal("Text"):Connect(function()
+	lastTextBoxCon = connect(obj:GetPropertyChangedSignal("Text"), function()
 		if not (UserInputService:IsKeyDown(Enum.KeyCode.Return) or UserInputService:IsKeyDown(Enum.KeyCode.KeypadEnter)) then
 			lastTextBoxString = obj.Text
 		end
 	end)
 end)
 
-UserInputService.InputBegan:Connect(function(input,gameProcessed)
+connect(UserInputService.InputBegan, function(input,gameProcessed)
 	if gameProcessed then
 		if Cmdbar and Cmdbar:IsFocused() then
 			if input.KeyCode == Enum.KeyCode.Up then
@@ -6576,7 +6560,7 @@ UserInputService.InputBegan:Connect(function(input,gameProcessed)
 	end
 end)
 
-LocalPlayer.Chatted:Connect(function()
+connect(LocalPlayer.Chatted, function()
 	wait()
 	if lastEnteredString then
 		local message = lastEnteredString
@@ -6586,15 +6570,16 @@ LocalPlayer.Chatted:Connect(function()
 end)
 
 Cmdbar.PlaceholderText = "Command Bar ("..prefix..")"
-Cmdbar:GetPropertyChangedSignal("Text"):Connect(function()
+connect(Cmdbar:GetPropertyChangedSignal("Text"), function()
 	if Cmdbar:IsFocused() then
-		IndexContents(Cmdbar.Text,true,true)
+		IndexContents(Cmdbar.Text, true, true)
 	end
 end)
+IndexContents(Cmdbar.Text, true, true)
 
 local tabComplete = nil
 tabAllowed = true
-Cmdbar.FocusLost:Connect(function(enterpressed)
+connect(Cmdbar.FocusLost, function(enterpressed)
 	if enterpressed then
 		local cmdbarText = Cmdbar.Text:gsub("^"..prefix,"")
 		execCmd(cmdbarText,LocalPlayer,true)
@@ -6613,7 +6598,7 @@ Cmdbar.FocusLost:Connect(function(enterpressed)
 	CMDsF.CanvasPosition = canvasPos
 end)
 
-Cmdbar.Focused:Connect(function()
+connect(Cmdbar.Focused, function()
 	historyCount = 0
 	canvasPos = CMDsF.CanvasPosition
 	if SettingsOpen == true then
@@ -6621,7 +6606,7 @@ Cmdbar.Focused:Connect(function()
 		CMDsF.Visible = true
 		Settings:TweenPosition(UDim2.new(0, 0, 0, 220), "InOut", "Quart", 0.2, true, nil)
 	end
-	tabComplete = UserInputService.InputBegan:Connect(function(input,gameProcessed)
+	tabComplete = connect(UserInputService.InputBegan, function(input,gameProcessed)
 		if Cmdbar:IsFocused() then
 			if tabAllowed == true and input.KeyCode == Enum.KeyCode.Tab and topCommand ~= nil then
 				autoComplete(topCommand)
@@ -6650,8 +6635,9 @@ function ESP(plr)
 		wait()
 		if plr.Character and plr.Name ~= LocalPlayer.Name and not COREGUI:FindFirstChild(plr.Name..'_ESP') then
 			local ESPholder = Instance.new("Folder")
-			ESPholder.Name = plr.Name..'_ESP'
+			ESPholder.Name = plr.Name .. '_ESP'
 			ESPholder.Parent = COREGUI
+			table.insert(instances, ESPholder)
 			repeat wait(1) until plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid")
 			for b,n in pairs (plr.Character:GetChildren()) do
 				if (n:IsA("BasePart")) then
@@ -6689,7 +6675,7 @@ function ESP(plr)
 				local espLoopFunc
 				local teamChange
 				local addedFunc
-				addedFunc = plr.CharacterAdded:Connect(function()
+				addedFunc = connect(plr.CharacterAdded, function()
 					if ESPenabled then
 						espLoopFunc:Disconnect()
 						teamChange:Disconnect()
@@ -6702,7 +6688,7 @@ function ESP(plr)
 						addedFunc:Disconnect()
 					end
 				end)
-				teamChange = plr:GetPropertyChangedSignal("TeamColor"):Connect(function()
+				teamChange = connect(plr:GetPropertyChangedSignal("TeamColor"), function()
 					if ESPenabled then
 						espLoopFunc:Disconnect()
 						addedFunc:Disconnect()
@@ -6726,7 +6712,7 @@ function ESP(plr)
 						espLoopFunc:Disconnect()
 					end
 				end
-				espLoopFunc = RunService.RenderStepped:Connect(espLoop)
+				espLoopFunc = connect(RunService.RenderStepped, espLoop)
 			end
 		end
 	end)
@@ -6744,6 +6730,7 @@ function CHMS(plr)
 			local ESPholder = Instance.new("Folder")
 			ESPholder.Name = plr.Name..'_CHMS'
 			ESPholder.Parent = COREGUI
+			table.insert(instances, ESPholder)
 			repeat wait(1) until plr.Character and getRoot(plr.Character) and plr.Character:FindFirstChildOfClass("Humanoid")
 			for b,n in pairs (plr.Character:GetChildren()) do
 				if (n:IsA("BasePart")) then
@@ -6761,7 +6748,7 @@ function CHMS(plr)
 			local addedFunc
 			local teamChange
 			local CHMSremoved
-			addedFunc = plr.CharacterAdded:Connect(function()
+			addedFunc = connect(plr.CharacterAdded, function()
 				if CHMSenabled then
 					ESPholder:Destroy()
 					teamChange:Disconnect()
@@ -6773,7 +6760,7 @@ function CHMS(plr)
 					addedFunc:Disconnect()
 				end
 			end)
-			teamChange = plr:GetPropertyChangedSignal("TeamColor"):Connect(function()
+			teamChange = connect(plr:GetPropertyChangedSignal("TeamColor"), function()
 				if CHMSenabled then
 					ESPholder:Destroy()
 					addedFunc:Disconnect()
@@ -6784,7 +6771,7 @@ function CHMS(plr)
 					teamChange:Disconnect()
 				end
 			end)
-			CHMSremoved = ESPholder.AncestryChanged:Connect(function()
+			CHMSremoved = connect(ESPholder.AncestryChanged, function()
 				teamChange:Disconnect()
 				addedFunc:Disconnect()
 				CHMSremoved:Disconnect()
@@ -6842,7 +6829,7 @@ function Locate(plr)
 				local lcLoopFunc
 				local addedFunc
 				local teamChange
-				addedFunc = plr.CharacterAdded:Connect(function()
+				addedFunc = connect(plr.CharacterAdded, function()
 					if ESPholder ~= nil and ESPholder.Parent ~= nil then
 						lcLoopFunc:Disconnect()
 						teamChange:Disconnect()
@@ -6855,7 +6842,7 @@ function Locate(plr)
 						addedFunc:Disconnect()
 					end
 				end)
-				teamChange = plr:GetPropertyChangedSignal("TeamColor"):Connect(function()
+				teamChange = connect(plr:GetPropertyChangedSignal("TeamColor"), function()
 					if ESPholder ~= nil and ESPholder.Parent ~= nil then
 						lcLoopFunc:Disconnect()
 						addedFunc:Disconnect()
@@ -6879,7 +6866,7 @@ function Locate(plr)
 						lcLoopFunc:Disconnect()
 					end
 				end
-				lcLoopFunc = RunService.RenderStepped:Connect(lcLoop)
+				lcLoopFunc = connect(RunService.RenderStepped, lcLoop)
 			end
 		end
 	end)
@@ -6918,7 +6905,7 @@ function refreshbinds()
 				newbind.Text.Text = key.." > "..binds[i].COMMAND.."  "..(binds[i].ISKEYUP and "(keyup)" or "(keydown)")
 			end
 			Holder_2.CanvasSize = UDim2.new(0,0,0, Position + 30)
-			newbind.Text.Delete.MouseButton1Click:Connect(function()
+			connect(newbind.Text.Delete.MouseButton1Click, function()
 				unkeybind(binds[i].COMMAND,binds[i].KEY)
 			end)
 		end
@@ -6945,7 +6932,7 @@ function unkeybind(cmd,key)
 	end
 end
 
-PositionsFrame.Delete.MouseButton1Click:Connect(function()
+connect(PositionsFrame.Delete.MouseButton1Click, function()
 	execCmd('cpos')
 end)
 
@@ -6973,10 +6960,10 @@ function refreshwaypoints()
 			table.insert(shade3,newpoint.Text.TP)
 			table.insert(text2,newpoint.Text.TP)
 			Holder_4.CanvasSize = UDim2.new(0,0,0, Position + 30)
-			newpoint.Text.Delete.MouseButton1Click:Connect(function()
+			connect(newpoint.Text.Delete.MouseButton1Click, function()
 				execCmd('dpos '..WayPoints[i].NAME)
 			end)
-			newpoint.Text.TP.MouseButton1Click:Connect(function()
+			connect(newpoint.Text.TP.MouseButton1Click, function()
 				execCmd("loadpos "..WayPoints[i].NAME)
 			end)
 			num = num+1
@@ -6996,10 +6983,10 @@ function refreshwaypoints()
 			table.insert(shade3,newpoint.Text.TP)
 			table.insert(text2,newpoint.Text.TP)
 			Holder_4.CanvasSize = UDim2.new(0,0,0, Position + 30)
-			newpoint.Text.Delete.MouseButton1Click:Connect(function()
+			connect(newpoint.Text.Delete.MouseButton1Click, function()
 				execCmd('dpos '..pWayPoints[i].NAME)
 			end)
-			newpoint.Text.TP.MouseButton1Click:Connect(function()
+			connect(newpoint.Text.TP.MouseButton1Click, function()
 				execCmd("loadpos "..pWayPoints[i].NAME)
 			end)
 			num = num+1
@@ -7030,7 +7017,7 @@ function refreshaliases()
 			table.insert(shade3,newalias.Text.Delete)
 			table.insert(text2,newalias.Text.Delete)
 			Holder_3.CanvasSize = UDim2.new(0,0,0, Position + 30)
-			newalias.Text.Delete.MouseButton1Click:Connect(function()
+			connect(newalias.Text.Delete.MouseButton1Click, function()
 				execCmd('removealias '..aliases[i].ALIAS)
 			end)
 		end
@@ -7039,19 +7026,20 @@ end
 
 local bindChosenKeyUp = false
 
-BindTo.MouseButton1Click:Connect(function()
+connect(BindTo.MouseButton1Click, function()
 	awaitingInput = true
 	BindTo.Text = 'Press something'
 end)
 
-BindTriggerSelect.MouseButton1Click:Connect(function()
+connect(BindTriggerSelect.MouseButton1Click, function()
 	bindChosenKeyUp = not bindChosenKeyUp
 	BindTriggerSelect.Text = bindChosenKeyUp and "KeyUp" or "KeyDown"
 end)
 
 newToggle = false
 Cmdbar_3.Parent.Visible = false
-On_2.MouseButton1Click:Connect(function()
+
+connect(On_2.MouseButton1Click, function()
 	if newToggle == false then newToggle = true
 		On_2.BackgroundTransparency = 0
 		Cmdbar_3.Parent.Visible = true
@@ -7063,7 +7051,7 @@ On_2.MouseButton1Click:Connect(function()
 	end
 end)
 
-Add_2.MouseButton1Click:Connect(function()
+connect(Add_2.MouseButton1Click, function()
 	if keySelected then
 		if string.find(Cmdbar_2.Text, "\\\\") or string.find(Cmdbar_3.Text, "\\\\") then
 			notify('Keybind Error','Only use one backslash to keybind multiple commands into one keybind or command')
@@ -7086,7 +7074,7 @@ Add_2.MouseButton1Click:Connect(function()
 	end
 end)
 
-Exit_2.MouseButton1Click:Connect(function()
+connect(Exit_2.MouseButton1Click, function()
 	Cmdbar_2.Text = 'Command'
 	Cmdbar_3.Text = 'Command 2'
 	BindTo.Text = 'Click to bind'
@@ -7144,10 +7132,9 @@ function onInputEnded(input,gameProcessed)
 	end
 end
 
-UserInputService.InputBegan:Connect(onInputBegan)
-UserInputService.InputEnded:Connect(onInputEnded)
-
-ClickTP.Select.MouseButton1Click:Connect(function()
+connect(UserInputService.InputBegan, onInputBegan)
+connect(UserInputService.InputEnded, onInputEnded)
+connect(ClickTP.Select.MouseButton1Click, function()
 	if keySelected then
 		addbind('clicktp',keyPressed,bindChosenKeyUp)
 		refreshbinds()
@@ -7160,7 +7147,7 @@ ClickTP.Select.MouseButton1Click:Connect(function()
 	end
 end)
 
-ClickDelete.Select.MouseButton1Click:Connect(function()
+connect(ClickDelete.Select.MouseButton1Click, function()
 	if keySelected then
 		addbind('clickdel',keyPressed,bindChosenKeyUp)
 		refreshbinds()
@@ -7195,7 +7182,7 @@ local function clicktpFunc()
 	end)
 end
 
-IYMouse.Button1Down:Connect(function()
+connect(IYMouse.Button1Down, function()
 	for i,v in pairs(binds) do
 		if v.COMMAND == 'clicktp' then
 			local input = v.KEY
@@ -7296,7 +7283,7 @@ function refreshplugins(dontSave)
 			table.insert(shade3,newplugin.Text.Delete)
 			table.insert(text2,newplugin.Text.Delete)
 			Holder_5.CanvasSize = UDim2.new(0,0,0, Position + 30)
-			newplugin.Text.Delete.MouseButton1Click:Connect(function()
+			connect(newplugin.Text.Delete.MouseButton1Click, function()
 				deletePlugin(pName)
 			end)
 		end
@@ -7307,14 +7294,15 @@ function refreshplugins(dontSave)
 end
 
 local PluginCache
+
 function LoadPlugin(val,startup)
 	local plugin
 
-	function CatchedPluginLoad()
+	local function CatchedPluginLoad()
 		plugin = loadfile(val)()
 	end
 
-	function handlePluginError(plerror)
+	local function handlePluginError(plerror)
 		notify('Plugin Error','An error occurred with the plugin, "'..val..'" and it could not be loaded')
 		if FindInTable(PluginsTable,val) then
 			for i,v in pairs(PluginsTable) do
@@ -7392,20 +7380,20 @@ function FindPlugins()
 	end
 end
 
-AddPlugin.MouseButton1Click:Connect(function()
+connect(AddPlugin.MouseButton1Click, function()
 	addPlugin(PluginsGUI.FileName.Text)
 end)
 
-Exit_3.MouseButton1Click:Connect(function()
+connect(Exit_3.MouseButton1Click, function()
 	PluginEditor:TweenPosition(UDim2.new(0.5, -180, 0, -500), "InOut", "Quart", 0.5, true, nil)
 	FileName.Text = 'Plugin File Name'
 end)
 
-Add_3.MouseButton1Click:Connect(function()
+connect(Add_3.MouseButton1Click, function()
 	PluginEditor:TweenPosition(UDim2.new(0.5, -180, 0, 310), "InOut", "Quart", 0.5, true, nil)
 end)
 
-Plugins.MouseButton1Click:Connect(function()
+connect(Plugins.MouseButton1Click, function()
 	if writefileExploit() then
 		PluginsFrame:TweenPosition(UDim2.new(0, 0, 0, 0), "InOut", "Quart", 0.5, true, nil)
 		wait(0.5)
@@ -7415,7 +7403,7 @@ Plugins.MouseButton1Click:Connect(function()
 	end
 end)
 
-Close_4.MouseButton1Click:Connect(function()
+connect(Close_4.MouseButton1Click, function()
 	SettingsHolder.Visible = true
 	PluginsFrame:TweenPosition(UDim2.new(0, 0, 0, 175), "InOut", "Quart", 0.5, true, nil)
 end)
@@ -7804,7 +7792,7 @@ commands:new('serverinfo', {
 			local SINFOGUI = background
 			FRAME:TweenPosition(UDim2.new(0.5, -130, 0, 100), "InOut", "Quart", 0.5, true, nil) 
 			wait(0.5)
-			Exit.MouseButton1Click:Connect(function()
+			connect(Exit.MouseButton1Click, function()
 				FRAME:TweenPosition(UDim2.new(0.5, -130, 0, -500), "InOut", "Quart", 0.5, true, nil) 
 				wait(0.6)
 				FRAME:Destroy()
@@ -7816,16 +7804,19 @@ commands:new('serverinfo', {
 			SINFOGUI.maxplayers.Text = Players.MaxPlayers.. " Players Max"
 			SINFOGUI.placeid.Text = "Place ID: " ..PlaceId
 
-			CopyApp.MouseButton1Click:Connect(function()
+			connect(CopyApp.MouseButton1Click, function()
 				toClipboard(speaker.CharacterAppearanceId)
 			end)
-			CopyPlrID.MouseButton1Click:Connect(function()
+
+			connect(CopyPlrID.MouseButton1Click, function()
 				toClipboard(speaker.UserId)
 			end)
-			CopyPlcID.MouseButton1Click:Connect(function()
+
+			connect(CopyPlcID.MouseButton1Click, function()
 				toClipboard(PlaceId)
 			end)
-			CopyPlcName.MouseButton1Click:Connect(function()
+
+			connect(CopyPlcName.MouseButton1Click, function()
 				toClipboard(Asset.Name)
 			end)
 
@@ -7908,7 +7899,7 @@ commands:new('autorejoin', {
 	aliases = { 'autorj' },
 	description = 'Automatically rejoin the game when the error message is shown.',
 	callback = function(args, speaker)
-		GuiService.ErrorMessageChanged:Connect(function()
+		connect(GuiService.ErrorMessageChanged, function()
 			execCmd("rejoin")
 		end)
 		notify("Auto Rejoin", "Auto rejoin enabled")
@@ -7974,7 +7965,7 @@ commands:new('noclip', {
 				end
 			end
 		end
-		Noclipping = RunService.Stepped:Connect(NoclipLoop)
+		Noclipping = connect(RunService.Stepped, NoclipLoop)
 		if args[1] and args[1] == 'nonotify' then return end
 		notify('Noclip', 'Noclip Enabled')
 	end
@@ -8043,14 +8034,14 @@ function sFLY(vfly)
 					SPEED = 0
 				end
 				if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
-					BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+					BV.velocity = ((camera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
 					lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
 				elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
-					BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+					BV.velocity = ((camera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((camera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).Position) - camera.CoordinateFrame.p)) * SPEED
 				else
 					BV.velocity = Vector3.new(0, 0, 0)
 				end
-				BG.cframe = workspace.CurrentCamera.CoordinateFrame
+				BG.cframe = camera.CoordinateFrame
 			until not FLYING
 			CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 			lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
@@ -8062,7 +8053,7 @@ function sFLY(vfly)
 			end
 		end)
 	end
-	flyKeyDown = IYMouse.KeyDown:Connect(function(KEY)
+	flyKeyDown = connect(IYMouse.KeyDown, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
 		elseif KEY:lower() == 's' then
@@ -8076,9 +8067,9 @@ function sFLY(vfly)
 		elseif QEfly and KEY:lower() == 'q' then
 			CONTROL.E = -(vfly and vehicleflyspeed or iyflyspeed)*2
 		end
-		pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Track end)
+		pcall(function() camera.CameraType = Enum.CameraType.Track end)
 	end)
-	flyKeyUp = IYMouse.KeyUp:Connect(function(KEY)
+	flyKeyUp = connect(IYMouse.KeyUp, function(KEY)
 		if KEY:lower() == 'w' then
 			CONTROL.F = 0
 		elseif KEY:lower() == 's' then
@@ -8107,7 +8098,7 @@ function NOFLY()
 	if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
 		LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
 	end
-	pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Custom end)
+	pcall(function() camera.CameraType = Enum.CameraType.Custom end)
 end
 
 local velocityHandlerName = randomString()
@@ -8150,7 +8141,7 @@ local mobilefly = function(speaker, vfly)
 	bg.P = 1000
 	bg.D = 50
 
-	mfly1 = speaker.CharacterAdded:Connect(function()
+	mfly1 = connect(speaker.CharacterAdded, function()
 		local bv = Instance.new("BodyVelocity")
 		bv.Name = velocityHandlerName
 		bv.Parent = root
@@ -8165,7 +8156,7 @@ local mobilefly = function(speaker, vfly)
 		bg.D = 50
 	end)
 
-	mfly2 = RunService.RenderStepped:Connect(function()
+	mfly2 = connect(RunService.RenderStepped, function()
 		root = getRoot(speaker.Character)
 		if speaker.Character:FindFirstChildWhichIsA("Humanoid") and root and root:FindFirstChild(velocityHandlerName) and root:FindFirstChild(gyroHandlerName) then
 			local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
@@ -8230,7 +8221,11 @@ commands:new('unfly', {
 	aliases = { 'nofly', 'novfly', 'unvehiclefly', 'novehiclefly', 'unvfly' },
 	description = 'Disables flying mode for the player.',
 	callback = function(args, speaker)
-		if not IsOnMobile then NOFLY() else unmobilefly(speaker) end
+		if IsOnMobile then
+			unmobilefly(speaker)
+		else
+			NOFLY()
+		end
 	end
 })
 
@@ -8315,10 +8310,10 @@ commands:new('cframefly', {
 		local Head = speaker.Character:WaitForChild("Head")
 		Head.Anchored = true
 		if CFloop then CFloop:Disconnect() end
-		CFloop = RunService.Heartbeat:Connect(function(deltaTime)
+		CFloop = connect(RunService.Heartbeat, function(deltaTime)
 			local moveDirection = speaker.Character:FindFirstChildOfClass('Humanoid').MoveDirection * (CFspeed * deltaTime)
 			local headCFrame = Head.CFrame
-			local cameraCFrame = workspace.CurrentCamera.CFrame
+			local cameraCFrame = camera.CFrame
 			local cameraOffset = headCFrame:ToObjectSpace(cameraCFrame).Position
 			cameraCFrame = cameraCFrame * CFrame.new(-cameraOffset.X, -cameraOffset.Y, -cameraOffset.Z + 1)
 			local cameraPosition = cameraCFrame.Position
@@ -8376,27 +8371,27 @@ commands:new('float', {
 				local FloatValue = -3.1
 				Float.CFrame = getRoot(pchar).CFrame * CFrame.new(0, FloatValue, 0)
 				notify('Float', 'Float Enabled (Q = down & E = up)')
-				qUp = IYMouse.KeyUp:Connect(function(KEY)
+				qUp = connect(IYMouse.KeyUp, function(KEY)
 					if KEY == 'q' then
 						FloatValue = FloatValue + 0.5
 					end
 				end)
-				eUp = IYMouse.KeyUp:Connect(function(KEY)
+				eUp = connect(IYMouse.KeyUp, function(KEY)
 					if KEY == 'e' then
 						FloatValue = FloatValue - 1.5
 					end
 				end)
-				qDown = IYMouse.KeyDown:Connect(function(KEY)
+				qDown = connect(IYMouse.KeyDown, function(KEY)
 					if KEY == 'q' then
 						FloatValue = FloatValue - 0.5
 					end
 				end)
-				eDown = IYMouse.KeyDown:Connect(function(KEY)
+				eDown = connect(IYMouse.KeyDown, function(KEY)
 					if KEY == 'e' then
 						FloatValue = FloatValue + 1.5
 					end
 				end)
-				floatDied = speaker.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+				floatDied = connect(speaker.Character:FindFirstChildOfClass('Humanoid').Died, function()
 					FloatingFunc:Disconnect()
 					Float:Destroy()
 					qUp:Disconnect()
@@ -8418,7 +8413,7 @@ commands:new('float', {
 						floatDied:Disconnect()
 					end
 				end
-				FloatingFunc = RunService.Heartbeat:Connect(FloatPadLoop)
+				FloatingFunc = connect(RunService.Heartbeat, FloatPadLoop)
 			end)
 		end
 	end
@@ -8476,14 +8471,14 @@ commands:new('swim', {
 				swimming = false
 			end
 			local Humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
-			gravReset = Humanoid.Died:Connect(swimDied)
+			gravReset = connect(Humanoid.Died, swimDied)
 			local enums = Enum.HumanoidStateType:GetEnumItems()
 			table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
 			for i, v in pairs(enums) do
 				Humanoid:SetStateEnabled(v, false)
 			end
 			Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
-			swimbeat = RunService.Heartbeat:Connect(function()
+			swimbeat = connect(RunService.Heartbeat, function()
 				pcall(function()
 					speaker.Character.HumanoidRootPart.Velocity = ((Humanoid.MoveDirection ~= Vector3.new() or UserInputService:IsKeyDown(Enum.KeyCode.Space)) and speaker.Character.HumanoidRootPart.Velocity or Vector3.new())
 				end)
@@ -8933,7 +8928,7 @@ commands:new('guidelete', {
 	aliases = {},
 	description = 'Enables the ability to delete GUIs by pressing backspace while hovering over them.',
 	callback = function(args, speaker)
-		deleteGuiInput = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+		deleteGuiInput = connect(UserInputService.InputBegan, function(input, gameProcessedEvent)
 			if not gameProcessedEvent then
 				if input.KeyCode == Enum.KeyCode.Backspace then
 					deleteGuisAtPos()
@@ -9204,7 +9199,7 @@ commands:new('antilag', {
 				v.Enabled = false
 			end
 		end
-		workspace.DescendantAdded:Connect(function(child)
+		connect(workspace.DescendantAdded, function(child)
 			task.spawn(function()
 				if child:IsA('ForceField') then
 					RunService.Heartbeat:Wait()
@@ -9365,7 +9360,7 @@ commands:new('partesp', {
 			end
 		end
 		if partEspTrigger == nil then
-			partEspTrigger = workspace.DescendantAdded:Connect(partAdded)
+			partEspTrigger = connect(workspace.DescendantAdded, partAdded)
 		end
 	end
 })
@@ -9472,6 +9467,7 @@ commands:new('nolocate', {
 })
 
 viewing = nil
+viewconnections = {}
 
 commands:new('view', {
 	usage = 'view / spectate [player]',
@@ -9479,26 +9475,31 @@ commands:new('view', {
 	description = 'Allows you to spectate a player by setting the camera to their character.',
 	callback = function(args, speaker)
 		StopFreecam()
+		for _, v in pairs(viewconnections) do
+			if typeof(v) == 'RBXScriptConnection' and v.Connected then
+				v:Disconnect()
+			end
+		end
 		local players = getPlayer(args[1], speaker)
 		for _, v in pairs(players) do
-			if viewDied then
-				viewDied:Disconnect()
-				viewChanged:Disconnect()
+			if v ~= speaker then
+				local char = v.Character
+				if char then
+					viewing = v
+					camera.CameraSubject = char
+					table.insert(viewconnections, connect(v.CharacterAdded, function(char)
+						camera.CameraSubject = char
+					end))
+					table.insert(viewconnections, connect(workspace:GetPropertyChangedSignal('CurrentCamera'), function()
+						while typeof(camera) ~= 'Instance' do
+							wait()
+						end
+						if viewing ~= nil then
+							camera.CameraSubject = v.Character
+						end
+					end))
+				end
 			end
-			viewing = Players[v]
-			workspace.CurrentCamera.CameraSubject = viewing.Character
-			notify('Spectate', 'Viewing ' .. Players[v].Name)
-
-			local function viewDiedFunc()
-				repeat wait() until Players[v].Character ~= nil and getRoot(Players[v].Character)
-				workspace.CurrentCamera.CameraSubject = viewing.Character
-			end
-			viewDied = Players[v].CharacterAdded:Connect(viewDiedFunc)
-
-			local function viewChangedFunc()
-				workspace.CurrentCamera.CameraSubject = viewing.Character
-			end
-			viewChanged = workspace.CurrentCamera:GetPropertyChangedSignal("CameraSubject"):Connect(viewChangedFunc)
 		end
 	end
 })
@@ -9513,7 +9514,7 @@ commands:new('viewpart', {
 			for _, v in pairs(workspace:GetDescendants()) do
 				if v.Name:lower() == getstring(1):lower() and v:IsA("BasePart") then
 					wait(0.1)
-					workspace.CurrentCamera.CameraSubject = v
+					camera.CameraSubject = v
 				end
 			end
 		end
@@ -9526,27 +9527,23 @@ commands:new('unview', {
 	description = 'Stops spectating and resets the camera to the speaker’s character.',
 	callback = function(args, speaker)
 		StopFreecam()
+		for _, v in pairs(viewconnections) do
+			if typeof(v) == 'RBXScriptConnection' and v.Connected then
+				v:Disconnect()
+			end
+		end
 		if viewing then
 			viewing = nil
 			notify('Spectate', 'View turned off')
 		end
-		if viewDied then
-			viewDied:Disconnect()
-			viewChanged:Disconnect()
+		local c = speaker.Character
+		if camera and c then
+			camera.CameraSubject = c
 		end
-		workspace.CurrentCamera.CameraSubject = speaker.Character
 	end
 })
 
 fcRunning = false
-local Camera = workspace.CurrentCamera
-workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-	local newCamera = workspace.CurrentCamera
-	if newCamera then
-		Camera = newCamera
-	end
-end)
-
 local INPUT_PRIORITY = Enum.ContextActionPriority.High.Value
 
 Spring = {}
@@ -9692,8 +9689,8 @@ function GetFocusDistance(cameraFrame)
 
 		for x = 0, 1, 0.5 do
 			for y = 0, 1, 0.5 do
-				local cx = (x - 0.5)*projx
-				local cy = (y - 0.5)*projy
+				local cx = (x - 0.5) * projx
+				local cy = (y - 0.5) * projy
 				local offset = fx*cx - fy*cy + fz
 				local origin = cameraFrame.p + offset*znear
 				local _, hit = workspace:FindPartOnRay(Ray.new(origin, offset.unit*minDist))
@@ -9721,28 +9718,28 @@ local function StepFreecam(dt)
 	local cameraCFrame = CFrame.new(cameraPos)*CFrame.fromOrientation(cameraRot.x, cameraRot.y, 0)*CFrame.new(vel*Vector3.new(1, 1, 1)*64*dt)
 	cameraPos = cameraCFrame.p
 
-	Camera.CFrame = cameraCFrame
-	Camera.Focus = cameraCFrame*CFrame.new(0, 0, -GetFocusDistance(cameraCFrame))
-	Camera.FieldOfView = cameraFov
+	camera.CFrame = cameraCFrame
+	camera.Focus = cameraCFrame*CFrame.new(0, 0, -GetFocusDistance(cameraCFrame))
+	camera.FieldOfView = cameraFov
 end
 
 local PlayerState = {} do
-	mouseBehavior = ""
-	mouseIconEnabled = ""
-	cameraType = ""
-	cameraFocus = ""
-	cameraCFrame = ""
-	cameraFieldOfView = ""
+	mouseBehavior = ''
+	mouseIconEnabled = ''
+	cameraType = ''
+	cameraFocus = ''
+	cameraCFrame = ''
+	cameraFieldOfView = ''
 
 	function PlayerState.Push()
-		cameraFieldOfView = Camera.FieldOfView
-		Camera.FieldOfView = 70
+		cameraFieldOfView = camera.FieldOfView
+		camera.FieldOfView = 70
 
-		cameraType = Camera.CameraType
-		Camera.CameraType = Enum.CameraType.Custom
+		cameraType = camera.CameraType
+		camera.CameraType = Enum.CameraType.Custom
 
-		cameraCFrame = Camera.CFrame
-		cameraFocus = Camera.Focus
+		cameraCFrame = camera.CFrame
+		cameraFocus = camera.Focus
 
 		mouseIconEnabled = UserInputService.MouseIconEnabled
 		UserInputService.MouseIconEnabled = true
@@ -9752,15 +9749,15 @@ local PlayerState = {} do
 	end
 
 	function PlayerState.Pop()
-		Camera.FieldOfView = 70
+		camera.FieldOfView = 70
 
-		Camera.CameraType = cameraType
+		camera.CameraType = cameraType
 		cameraType = nil
 
-		Camera.CFrame = cameraCFrame
+		camera.CFrame = cameraCFrame
 		cameraCFrame = nil
 
-		Camera.Focus = cameraFocus
+		camera.Focus = cameraFocus
 		cameraFocus = nil
 
 		UserInputService.MouseIconEnabled = mouseIconEnabled
@@ -9775,13 +9772,13 @@ function StartFreecam(pos)
 	if fcRunning then
 		StopFreecam()
 	end
-	local cameraCFrame = Camera.CFrame
+	local cameraCFrame = camera.CFrame
 	if pos then
 		cameraCFrame = pos
 	end
 	cameraRot = Vector2.new()
 	cameraPos = cameraCFrame.p
-	cameraFov = Camera.FieldOfView
+	cameraFov = camera.FieldOfView
 
 	velSpring:Reset(Vector3.new())
 	panSpring:Reset(Vector2.new())
@@ -9797,7 +9794,7 @@ function StopFreecam()
 	Input.StopCapture()
 	RunService:UnbindFromRenderStep("Freecam")
 	PlayerState.Pop()
-	workspace.Camera.FieldOfView = 70
+	camera.FieldOfView = 70
 	fcRunning = false
 end
 
@@ -9884,7 +9881,7 @@ commands:new("notifyfreecamposition", {
 	description = "Displays the current position of the freecam",
 	callback = function(args, speaker)
 		if fcRunning then
-			local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
+			local X, Y, Z = camera.CFrame.Position.X, camera.CFrame.Position.Y, camera.CFrame.Position.Z
 			local Format, Round = string.format, math.round
 			notify("Current Position", Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
 		end
@@ -9897,7 +9894,7 @@ commands:new("copyfreecamposition", {
 	description = "Copies the current position of the freecam to clipboard",
 	callback = function(args, speaker)
 		if fcRunning then
-			local X, Y, Z = workspace.CurrentCamera.CFrame.Position.X, workspace.CurrentCamera.CFrame.Position.Y, workspace.CurrentCamera.CFrame.Position.Z
+			local X, Y, Z = camera.CFrame.Position.X, camera.CFrame.Position.Y, camera.CFrame.Position.Z
 			local Format, Round = string.format, math.round
 			toClipboard(Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
 		end
@@ -9909,7 +9906,7 @@ commands:new("gotocamera", {
 	aliases = {"gotocam", "tocam"},
 	description = "Teleports the player's character to the camera's position",
 	callback = function(args, speaker)
-		getRoot(speaker.Character).CFrame = workspace.Camera.CFrame
+		getRoot(speaker.Character).CFrame = camera.CFrame
 	end
 })
 
@@ -9918,7 +9915,7 @@ commands:new("tweengotocamera", {
 	aliases = {"tweengotocam", "tgotocam", "ttocam"},
 	description = "Tweens the player's character to the camera's position",
 	callback = function(args, speaker)
-		TweenService:Create(getRoot(speaker.Character), TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = workspace.Camera.CFrame}):Play()
+		TweenService:Create(getRoot(speaker.Character), TweenInfo.new(tweenSpeed, Enum.EasingStyle.Linear), {CFrame = camera.CFrame}):Play()
 	end
 })
 
@@ -9930,7 +9927,7 @@ commands:new("fov", {
 	callback = function(args, speaker)
 		local fov = args[1] or 70
 		if isNumber(fov) then
-			workspace.CurrentCamera.FieldOfView = fov
+			camera.FieldOfView = fov
 		end
 	end
 })
@@ -9954,7 +9951,7 @@ commands:new("lookat", {
 		for i, v in pairs(players) do
 			local target = Players[v].Character
 			if target and target:FindFirstChild('Head') then
-				workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, target.Head.CFrame.p)
+				camera.CFrame = CFrame.new(camera.CFrame.p, target.Head.CFrame.p)
 				wait(0.1)
 			end
 		end
@@ -9970,11 +9967,11 @@ commands:new("fixcam", {
 	callback = function(args, speaker)
 		StopFreecam()
 		execCmd('unview')
-		workspace.CurrentCamera:remove()
+		camera:Remove()
 		wait(0.1)
-		repeat wait() until speaker.Character ~= nil
-		workspace.CurrentCamera.CameraSubject = speaker.Character:FindFirstChildWhichIsA('Humanoid')
-		workspace.CurrentCamera.CameraType = "Custom"
+		repeat wait() until speaker.Character ~= nil and camera
+		camera.CameraSubject = speaker.Character:FindFirstChildWhichIsA('Humanoid')
+		camera.CameraType = "Custom"
 		speaker.CameraMinZoomDistance = 0.5
 		speaker.CameraMaxZoomDistance = 400
 		speaker.CameraMode = "Classic"
@@ -10257,7 +10254,7 @@ commands:new('antiafk', {
 			end
 		else
 			local VirtualUser = cloneref(game:GetService("VirtualUser"))
-			LocalPlayer.Idled:Connect(function()
+			connect(LocalPlayer.Idled, function()
 				VirtualUser:CaptureController()
 				VirtualUser:ClickButton2(Vector2.new())
 			end)
@@ -10942,19 +10939,19 @@ commands:new({
 			local rotation = 0
 			local speed = tonumber(args[2]) or 0.2
 			local distance = tonumber(args[3]) or 6
-			orbit1 = RunService.Heartbeat:Connect(function()
+			orbit1 = connect(RunService.Heartbeat, function()
 				pcall(function()
 					rotation = rotation + speed
 					root.CFrame = CFrame.new(getRoot(target.Character).Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(distance, 0, 0)
 				end)
 			end)
-			orbit2 = RunService.RenderStepped:Connect(function()
+			orbit2 = connect(RunService.RenderStepped, function()
 				pcall(function()
 					root.CFrame = CFrame.new(root.Position, getRoot(target.Character).Position)
 				end)
 			end)
-			orbit3 = humanoid.Died:Connect(function() execCmd("unorbit") end)
-			orbit4 = humanoid.Seated:Connect(function(value) if value then execCmd("unorbit") end end)
+			orbit3 = connect(humanoid.Died, function() execCmd("unorbit") end)
+			orbit4 = connect(humanoid.Seated, function(value) if value then execCmd("unorbit") end end)
 			notify("Orbit", "Started orbiting " .. formatUsername(target))
 		end
 	end
@@ -11333,7 +11330,7 @@ commands:new('infjump', {
 	callback = function(args, speaker)
 		if infJump then infJump:Disconnect() end
 		infJumpDebounce = false
-		infJump = UserInputService.JumpRequest:Connect(function()
+		infJump = connect(UserInputService.JumpRequest, function()
 			if not infJumpDebounce then
 				infJumpDebounce = true
 				speaker.Character:FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
@@ -11362,7 +11359,7 @@ commands:new('flyjump', {
 	description = 'Enables flyjump for the player, making them jump when the jump request is triggered.',
 	callback = function(args, speaker)
 		if flyjump then flyjump:Disconnect() end
-		flyjump = UserInputService.JumpRequest:Connect(function()
+		flyjump = connect(UserInputService.JumpRequest, function()
 			speaker.Character:FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
 		end)
 	end
@@ -11397,11 +11394,11 @@ commands:new('autojump', {
 		end
 		autoJump()
 
-		HumanModCons.ajLoop = (HumanModCons.ajLoop and HumanModCons.ajLoop:Disconnect() and false) or RunService.RenderStepped:Connect(autoJump)
-		HumanModCons.ajCA = (HumanModCons.ajCA and HumanModCons.ajCA:Disconnect() and false) or speaker.CharacterAdded:Connect(function(nChar)
+		HumanModCons.ajLoop = (HumanModCons.ajLoop and HumanModCons.ajLoop:Disconnect() and false) or connect(RunService.RenderStepped, autoJump)
+		HumanModCons.ajCA = (HumanModCons.ajCA and HumanModCons.ajCA:Disconnect() and false) or connect(speaker.CharacterAdded, function(nChar)
 			Char, Human = nChar, nChar:WaitForChild("Humanoid")
 			autoJump()
-			HumanModCons.ajLoop = (HumanModCons.ajLoop and HumanModCons.ajLoop:Disconnect() and false) or RunService.RenderStepped:Connect(autoJump)
+			HumanModCons.ajLoop = (HumanModCons.ajLoop and HumanModCons.ajLoop:Disconnect() and false) or connect(RunService.RenderStepped, autoJump)
 		end)
 	end
 })
@@ -11443,12 +11440,12 @@ commands:new('edgejump', {
 
 		edgejump()
 
-		HumanModCons.ejLoop = (HumanModCons.ejLoop and HumanModCons.ejLoop:Disconnect() and false) or RunService.RenderStepped:Connect(edgejump)
+		HumanModCons.ejLoop = (HumanModCons.ejLoop and HumanModCons.ejLoop:Disconnect() and false) or connect(RunService.RenderStepped, edgejump)
 
-		HumanModCons.ejCA = (HumanModCons.ejCA and HumanModCons.ejCA:Disconnect() and false) or speaker.CharacterAdded:Connect(function(nChar)
+		HumanModCons.ejCA = (HumanModCons.ejCA and HumanModCons.ejCA:Disconnect() and false) or connect(speaker.CharacterAdded, function(nChar)
 			Char, Human = nChar, nChar:WaitForChild("Humanoid")
 			edgejump()
-			HumanModCons.ejLoop = (HumanModCons.ejLoop and HumanModCons.ejLoop:Disconnect() and false) or RunService.RenderStepped:Connect(edgejump)
+			HumanModCons.ejLoop = (HumanModCons.ejLoop and HumanModCons.ejLoop:Disconnect() and false) or connect(RunService.RenderStepped, edgejump)
 		end)
 	end
 })
@@ -11513,7 +11510,7 @@ commands:new('loopnobgui', {
 			end
 		end
 
-		charPartTrigger = speaker.Character.DescendantAdded:Connect(charPartAdded)
+		charPartTrigger = connect(speaker.Character.DescendantAdded, charPartAdded)
 	end
 })
 
@@ -11885,8 +11882,7 @@ commands:new('tptool', {
 		TpTool.Name = "Teleport Tool"
 		TpTool.RequiresHandle = false
 		TpTool.Parent = speaker.Backpack
-
-		TpTool.Activated:Connect(function()
+		connect(TpTool.Activated, function()
 			local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
 			local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
 
@@ -12043,11 +12039,11 @@ commands:new('loopspeed', {
 			WalkSpeedChange()
 
 			-- Disconnect previous loop and connect the new one
-			HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
-			HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false) or speaker.CharacterAdded:Connect(function(nChar)
+			HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or connect(Human:GetPropertyChangedSignal("WalkSpeed"), WalkSpeedChange)
+			HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false) or connect(speaker.CharacterAdded, function(nChar)
 				Char, Human = nChar, nChar:WaitForChild("Humanoid")
 				WalkSpeedChange()
-				HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
+				HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or connect(Human:GetPropertyChangedSignal("WalkSpeed"), WalkSpeedChange)
 			end)
 		end
 	end
@@ -12120,12 +12116,12 @@ commands:new('loopjumppower', {
 
 			JumpPowerChange()
 
-			HumanModCons.jpLoop = (HumanModCons.jpLoop and HumanModCons.jpLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("JumpPower"):Connect(JumpPowerChange)
+			HumanModCons.jpLoop = (HumanModCons.jpLoop and HumanModCons.jpLoop:Disconnect() and false) or connect(Human:GetPropertyChangedSignal("JumpPower"), JumpPowerChange)
 
-			HumanModCons.jpCA = (HumanModCons.jpCA and HumanModCons.jpCA:Disconnect() and false) or speaker.CharacterAdded:Connect(function(nChar)
+			HumanModCons.jpCA = (HumanModCons.jpCA and HumanModCons.jpCA:Disconnect() and false) or connect(speaker.CharacterAdded, function(nChar)
 				Char, Human = nChar, nChar:WaitForChild("Humanoid")
 				JumpPowerChange()
-				HumanModCons.jpLoop = (HumanModCons.jpLoop and HumanModCons.jpLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("JumpPower"):Connect(JumpPowerChange)
+				HumanModCons.jpLoop = (HumanModCons.jpLoop and HumanModCons.jpLoop:Disconnect() and false) or connect(Human:GetPropertyChangedSignal("JumpPower"), JumpPowerChange)
 			end)
 		end
 	end
@@ -12396,7 +12392,7 @@ commands:new('headsit', {
 			if humanoid then
 				humanoid.Sit = true
 
-				headSit = RunService.Heartbeat:Connect(function()
+				headSit = connect(RunService.Heartbeat, function()
 					local targetPlayer = Players:FindFirstChild(Players[v].Name)
 					local targetCharacter = targetPlayer and targetPlayer.Character
 					local speakerCharacter = speaker.Character
@@ -12629,57 +12625,60 @@ function getTorso(x)
 	return nil
 end
 
-commands:new("bang", {
-	usage = "bang [player] [speed]",
-	aliases = {},
-	description = "Plays a 'bang' animation. If a player is specified, the animation follows them.",
-	callback = function(args, speaker)
-		execCmd("unbang")
-		wait()
+if not studio then
+	commands:new("bang", {
+		usage = "bang [player] [speed]",
+		aliases = {},
+		description = "Plays a 'bang' animation. If a player is specified, the animation follows them.",
+		callback = function(args, speaker)
+			execCmd("unbang")
+			wait()
 
-		local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
-		bangAnim = Instance.new("Animation")
-		bangAnim.AnimationId = not r15(speaker) and "rbxassetid://148840371" or "rbxassetid://5918726674"
-		bang = humanoid:LoadAnimation(bangAnim)
-		bang:Play(0.1, 1, 1)
-		bang:AdjustSpeed(args[2] or 3)
+			local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
+			bangAnim = Instance.new("Animation")
+			bangAnim.AnimationId = not r15(speaker) and "rbxassetid://148840371" or "rbxassetid://5918726674"
+			table.insert(instances, bangAnim)
+			bang = humanoid:LoadAnimation(bangAnim)
+			bang:Play(0.1, 1, 1)
+			bang:AdjustSpeed(args[2] or 3)
 
-		bangDied = humanoid.Died:Connect(function()
-			bang:Stop()
-			bangAnim:Destroy()
-			bangDied:Disconnect()
-			if bangLoop then bangLoop:Disconnect() end
-		end)
+			bangDied = connect(humanoid.Died, function()
+				bang:Stop()
+				bangAnim:Destroy()
+				bangDied:Disconnect()
+				if bangLoop then bangLoop:Disconnect() end
+			end)
 
-		if args[1] then
-			local players = getPlayer(args[1], speaker)
-			for _, v in pairs(players) do
-				local bangplr = Players[v].Name
-				local bangOffset = CFrame.new(0, 0, 1.1)
-				bangLoop = RunService.Stepped:Connect(function()
-					pcall(function()
-						local otherRoot = getTorso(Players[bangplr].Character)
-						getRoot(speaker.Character).CFrame = otherRoot.CFrame * bangOffset
+			if args[1] then
+				local players = getPlayer(args[1], speaker)
+				for _, v in pairs(players) do
+					local bangplr = Players[v].Name
+					local bangOffset = CFrame.new(0, 0, 1.1)
+					bangLoop = connect(RunService.Stepped, function()
+						pcall(function()
+							local otherRoot = getTorso(Players[bangplr].Character)
+							getRoot(speaker.Character).CFrame = otherRoot.CFrame * bangOffset
+						end)
 					end)
-				end)
+				end
 			end
 		end
-	end
-})
+	})
 
-commands:new("unbang", {
-	usage = "unbang",
-	aliases = {},
-	description = "Stops and removes the bang animation if it's active.",
-	callback = function(args, speaker)
-		if bangDied then
-			bangDied:Disconnect()
-			bang:Stop()
-			bangAnim:Destroy()
-			bangLoop:Disconnect()
+	commands:new("unbang", {
+		usage = "unbang",
+		aliases = {},
+		description = "Stops and removes the bang animation if it's active.",
+		callback = function(args, speaker)
+			if bangDied then
+				bangDied:Disconnect()
+				bang:Stop()
+				bangAnim:Destroy()
+				bangLoop:Disconnect()
+			end
 		end
-	end
-})
+	})
+end
 
 commands:new('carpet', {
 	usage = 'carpet [player]',
@@ -12699,14 +12698,14 @@ commands:new('carpet', {
 				carpet:Play(0.1, 1, 1)
 				local carpetplr = Players[v].Name
 
-				carpetDied = humanoid.Died:Connect(function()
+				carpetDied = connect(humanoid.Died, function()
 					carpetLoop:Disconnect()
 					carpet:Stop()
 					carpetAnim:Destroy()
 					carpetDied:Disconnect()
 				end)
 
-				carpetLoop = RunService.Heartbeat:Connect(function()
+				carpetLoop = connect(RunService.Heartbeat, function()
 					pcall(function()
 						getRoot(LocalPlayer.Character).CFrame = getRoot(Players[carpetplr].Character).CFrame
 					end)
@@ -13000,7 +12999,7 @@ commands:new('instantproximityprompts', {
 		if fireproximityprompt then
 			execCmd("uninstantproximityprompts")
 			wait(0.1)
-			PromptButtonHoldBegan = ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+			PromptButtonHoldBegan = connect(ProximityPromptService.PromptButtonHoldBegan, function(prompt)
 				fireproximityprompt(prompt)
 			end)
 		else
@@ -13046,7 +13045,7 @@ commands:new('grabtools', {
 			grabtoolsFunc:Disconnect() 
 		end
 
-		grabtoolsFunc = workspace.ChildAdded:Connect(function(child)
+		grabtoolsFunc = connect(workspace.ChildAdded, function(child)
 			if speaker.Character and child:IsA("BackpackItem") and child:FindFirstChild("Handle") then
 				humanoid:EquipTool(child)
 			end
@@ -13078,7 +13077,7 @@ commands:new('removespecifictool', {
 	callback = function(args, speaker)
 		if args[1] and speaker:FindFirstChildOfClass("Backpack") then
 			local tool = string.lower(getstring(1))
-			local RST = RunService.RenderStepped:Connect(function()
+			local RST = connect(RunService.RenderStepped, function()
 				if speaker:FindFirstChildOfClass("Backpack") then
 					for _, v in pairs(speaker:FindFirstChildOfClass("Backpack"):GetChildren()) do
 						if v.Name:lower() == tool then
@@ -13260,7 +13259,7 @@ commands:new('hatspin', {
 			keep.P = 30000
 			keep.D = 50
 
-			spinhats = RunService.Stepped:Connect(function()
+			spinhats = connect(RunService.Stepped, function()
 				pcall(function()
 					keep.Position = LocalPlayer.Character.Head.Position
 				end)
@@ -13522,7 +13521,7 @@ commands:new('givetool', {
 	description = 'Gives a tool to a player by moving the speaker\'s humanoid to their position and firing touch interest events.',
 	callback = function(args, speaker)
 		local v = Players[getPlayer(args[1], speaker)[1]].Character
-		workspace.CurrentCamera.CameraSubject = v
+		camera.CameraSubject = v
 		local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
 		local hum = Char and Char:FindFirstChildWhichIsA('Humanoid')
 		local hrp = hum and hum.RootPart
@@ -13625,7 +13624,7 @@ commands:new('loopfullbright', {
 			Lighting.GlobalShadows = false
 			Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 		end
-		brightLoop = RunService.RenderStepped:Connect(brightFunc)
+		brightLoop = connect(RunService.RenderStepped, brightFunc)
 	end
 })
 
@@ -14100,7 +14099,7 @@ commands:new('fling', {
 			execCmd('unfling')
 		end
 
-		flingDied = speaker.Character:FindFirstChildOfClass('Humanoid').Died:Connect(flingDiedF)
+		flingDied = connect(speaker.Character:FindFirstChildOfClass('Humanoid').Died, flingDiedF)
 
 		repeat
 			bambam.AngularVelocity = Vector3.new(0, 99999, 0)
@@ -14200,7 +14199,7 @@ commands:new('walkfling', {
 
 		local humanoid = speaker.Character:FindFirstChildWhichIsA("Humanoid")
 		if humanoid then
-			humanoid.Died:Connect(function()
+			connect(humanoid.Died, function()
 				execCmd("unwalkfling")
 			end)
 		end
@@ -14332,7 +14331,7 @@ commands:new("loopxray", {
 		if xrayLoop then
 			xrayLoop:Disconnect()
 		end
-		xrayLoop = RunService.RenderStepped:Connect(function()
+		xrayLoop = connect(RunService.RenderStepped, function()
 			xrayEnabled = true
 			xray()
 		end)
@@ -14376,7 +14375,7 @@ commands:new('walltp', {
 			end
 		end
 
-		walltpTouch = torso.Touched:Connect(touchedFunc)
+		walltpTouch = connect(torso.Touched, touchedFunc)
 	end
 })
 
@@ -14409,7 +14408,7 @@ commands:new('autoclick', {
 			if args[2] and isNumber(args[2]) then releaseDelay = tonumber(args[2]) end
 
 			autoclicking = true
-			cancelAutoClick = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+			cancelAutoClick = connect(UserInputService.InputBegan, function(input, gameProcessedEvent)
 				if not gameProcessedEvent then
 					if (input.KeyCode == Enum.KeyCode.Backspace and UserInputService:IsKeyDown(Enum.KeyCode.Equals)) or (input.KeyCode == Enum.KeyCode.Equals and UserInputService:IsKeyDown(Enum.KeyCode.Backspace)) then
 						autoclicking = false
@@ -14515,7 +14514,7 @@ commands:new('hovername', {
 			end
 		end
 
-		nbUpdateFunc = IYMouse.Move:Connect(updateNameBox)
+		nbUpdateFunc = connect(IYMouse.Move, updateNameBox)
 	end
 })
 
@@ -14593,7 +14592,7 @@ commands:new("stareat", {
 
 		for _, player in pairs(getPlayers(args[1], speaker)) do
 			if player ~= speaker then
-				stareAtConnection = RunService.Stepped:Connect(function()
+				stareAtConnection = connect(RunService.Stepped, function()
 					local char = player.Character
 					local pivotpos = char and char:GetPivot().Position
 					local mychar = speaker.Character
@@ -14622,7 +14621,7 @@ commands:new("unstareat", {
 })
 
 RolewatchData = {Group = 0, Role = "", Leave = false}
-RolewatchConnection = Players.PlayerAdded:Connect(function(player)
+RolewatchConnection = connect(Players.PlayerAdded, function(player)
 	if RolewatchData.Group == 0 then return end
 	if player:IsInGroup(RolewatchData.Group) then
 		if tostring(player:GetRoleInGroup(RolewatchData.Group)):lower() == RolewatchData.Role:lower() then
@@ -14700,7 +14699,7 @@ commands:new("staffwatch", {
 
 		if game.CreatorType == Enum.CreatorType.Group then
 			local found = {}
-			staffwatchjoin = Players.PlayerAdded:Connect(function(player)
+			staffwatchjoin = connect(Players.PlayerAdded, function(player)
 				local result = getStaffRole(player)
 				if result.Staff then
 					notify("Staffwatch", formatUsername(player) .. " is a " .. result.Role)
@@ -14800,7 +14799,7 @@ commands:new("antivoid", {
 		execCmd("unantivoid nonotify")
 		wait()
 
-		antivoidloop = RunService.Stepped:Connect(function()
+		antivoidloop = connect(RunService.Stepped, function()
 			local root = getRoot(speaker.Character)
 			if root and root.Position.Y <= OrgDestroyHeight + 25 then
 				root.Velocity = root.Velocity + Vector3.new(0, 250, 0)
@@ -14890,13 +14889,13 @@ commands:new("alignmentkeys", {
 	aliases = {},
 	description = "Enables the left and right alignment keys (comma and period) for camera panning.",
 	callback = function(args, speaker)
-		alignmentKeys = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		alignmentKeys = connect(UserInputService.InputBegan, function(input, gameProcessed)
 			if gameProcessed then return end
 			if input.KeyCode == Enum.KeyCode.Comma then
-				workspace.CurrentCamera:PanUnits(-1)
+				camera:PanUnits(-1)
 			end
 			if input.KeyCode == Enum.KeyCode.Period then
-				workspace.CurrentCamera:PanUnits(1)
+				camera:PanUnits(1)
 			end
 		end)
 
@@ -14972,7 +14971,7 @@ commands:new("listento", {
 
 		if root then
 			SoundService:SetListener(Enum.ListenerType.ObjectPosition, root)
-			listentoChar = player.CharacterAdded:Connect(function()
+			listentoChar = connect(player.CharacterAdded, function()
 				repeat task.wait() until Players[player.Name].Character and getRoot(Players[player.Name].Character)
 				SoundService:SetListener(Enum.ListenerType.ObjectPosition, getRoot(Players[player.Name].Character))
 			end)
@@ -15068,7 +15067,7 @@ commands:new("freezeunanchored", {
 			freezeUnanchored(v)
 		end
 
-		freezingua = workspace.DescendantAdded:Connect(freezeUnanchored)
+		freezingua = connect(workspace.DescendantAdded, freezeUnanchored)
 	end
 })
 
@@ -15217,7 +15216,7 @@ commands:new('autokeypress', {
 			if args[2] and isNumber(args[2]) then clickDelay = args[2] end
 			if args[3] and isNumber(args[3]) then releaseDelay = args[3] end
 			autoKeyPressing = true
-			cancelAutoKeyPress = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+			cancelAutoKeyPress = connect(UserInputService.InputBegan, function(input, gameProcessedEvent)
 				if not gameProcessedEvent then
 					if (input.KeyCode == Enum.KeyCode.Backspace and UserInputService:IsKeyDown(Enum.KeyCode.Equals)) or 
 						(input.KeyCode == Enum.KeyCode.Equals and UserInputService:IsKeyDown(Enum.KeyCode.Backspace)) then
@@ -15307,7 +15306,7 @@ commands:new('addallplugins', {
 	end
 })
 
-if studio then
+if studio and game.PlaceId == 95229334476446 then
 	local replicatedStorage = game:GetService('ReplicatedStorage')
 	local remoteEvent = replicatedStorage:WaitForChild('IYEvent')
 
@@ -15323,7 +15322,7 @@ if studio then
 				end
 			end
 		})
-		
+
 		commands:new('respawn', {
 			usage = 'respawn',
 			aliases = {},
@@ -15368,8 +15367,6 @@ else
 	})
 end
 
-refreshCommandList()
-
 if IsOnMobile then
 	local QuickCapture = Instance.new("TextButton")
 	local UICorner = Instance.new("UICorner")
@@ -15389,7 +15386,7 @@ if IsOnMobile then
 	UICorner.Name = randomString()
 	UICorner.CornerRadius = UDim.new(0.5, 0)
 	UICorner.Parent = QuickCapture
-	QuickCapture.MouseButton1Click:Connect(function()
+	connect(QuickCapture.MouseButton1Click, function()
 		Cmdbar:CaptureFocus()
 		maximizeHolder()
 	end)
@@ -15401,14 +15398,21 @@ Scale.Scale = math.max(Holder.AbsoluteSize.X / 1920, guiScale)
 Scale.Parent = ScaledHolder
 ScaledHolder.Size = UDim2.fromScale(1 / Scale.Scale, 1 / Scale.Scale)
 
+connect(Tooltip:GetPropertyChangedSignal('Visible'), function()
+	local visible = Tooltip.Visible
+
+	Title_3.Visible = visible
+	Description.Visible = visible
+end)
+
 local tooltipSize = Tooltip.Size
 local tooltipTitleTextSize = Title_3.TextSize
 local tooltipDescTextSize = Description.TextSize
 
-Scale:GetPropertyChangedSignal("Scale"):Connect(function()
+connect(Scale:GetPropertyChangedSignal("Scale"), function()
 	local scale = Scale.Scale
 
-	Tooltip.Size = UDim2.fromScale(tooltipSize.X.Scale * scale, tooltipSize.Y.Scale * scale)
+	Tooltip.Size = UDim2.fromOffset(tooltipSize.X.Offset * scale, tooltipSize.Y.Offset * scale)
 	Title_3.TextSize = tooltipTitleTextSize * scale
 	Description.TextSize = tooltipDescTextSize * scale
 	ScaledHolder.Size = UDim2.fromScale(1 / scale, 1 / scale)
@@ -15464,14 +15468,14 @@ function hookCharEvents(player, instant)
 	local humanoid = character and (character:FindFirstChildWhichIsA('Humanoid') or character:WaitForChild('Humanoid', 10))
 	local health = humanoid.Health
 
-	humanoid.HealthChanged:Connect(function(newHealth)
+	connect(humanoid.HealthChanged, function(newHealth)
 		if health > newHealth then
 			eventEditor.FireEvent('OnDamage', player, newHealth)
 		end
 		health = newHealth
 	end)
 
-	humanoid.Died:Connect(function()
+	connect(humanoid.Died, function()
 		eventEditor.FireEvent('OnDied', player)
 		local creator = humanoid:FindFirstChild('creator')
 		if creator and creator:IsA('ObjectValue') and creator.Value then
@@ -15480,12 +15484,21 @@ function hookCharEvents(player, instant)
 	end)
 end
 
-Players.PlayerAdded:Connect(function(plr)
+connect(Players.PlayerAdded, function(plr)
 	eventEditor.FireEvent("OnJoin",plr.Name)
-	if isLegacyChat then plr.Chatted:Connect(function(msg) eventEditor.FireEvent("OnChatted",tostring(plr),msg) end) end
-	plr.CharacterAdded:Connect(function() eventEditor.FireEvent("OnSpawn",tostring(plr)) hookCharEvents(plr) end)
+	if isLegacyChat then
+		connect(plr.Chatted, function(msg)
+			eventEditor.FireEvent("OnChatted",tostring(plr),msg)
+		end)
+	end
+	connect(plr.CharacterAdded, function()
+		eventEditor.FireEvent("OnSpawn",tostring(plr))
+		hookCharEvents(plr)
+	end)
 	JoinLog(plr)
-	if isLegacyChat then ChatLog(plr) end
+	if isLegacyChat then
+		ChatLog(plr)
+	end
 	if ESPenabled then
 		repeat wait(1) until plr.Character and getRoot(plr.Character)
 		ESP(plr)
@@ -15497,7 +15510,7 @@ Players.PlayerAdded:Connect(function(plr)
 end)
 
 if not isLegacyChat then
-	TextChatService.MessageReceived:Connect(function(message)
+	connect(TextChatService.MessageReceived, function(message)
 		if message.TextSource then
 			local player = Players:GetPlayerByUserId(message.TextSource.UserId)
 			if not player then return end
@@ -15515,7 +15528,7 @@ if not isLegacyChat then
 end
 
 for _, player in pairs(Players:GetPlayers()) do
-	player.CharacterAdded:Connect(function(character)
+	connect(player.CharacterAdded, function(character)
 		eventEditor.FireEvent('OnSpawn', player)
 		coroutine.wrap(hookCharEvents)(player)
 	end) 
@@ -15552,31 +15565,64 @@ if aliases and #aliases > 0 then
 	refreshaliases()
 end
 
-IYMouse.Move:Connect(checkTT)
+connect(IYMouse.Move, checkTT)
 
-CaptureService.CaptureBegan:Connect(function()
+connect(CaptureService.CaptureBegan, function()
 	Holder.Visible = false
 end)
 
-CaptureService.CaptureEnded:Connect(function()
+connect(CaptureService.CaptureEnded, function()
 	task.delay(0.1, function()
 		Holder.Visible = true
 	end)
 end)
 
-task.spawn(function()
-	wait()
-	Credits:TweenPosition(UDim2.new(0, 0, 0.9, 0), "Out", "Quart", 0.2)
-	Logo:TweenSizeAndPosition(UDim2.new(0, 175, 0, 175), UDim2.new(0, 37, 0, 45), "Out", "Quart", 0.3)
-	wait(1)
-	local OutInfo = TweenInfo.new(1.6809, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-	TweenService:Create(Logo, OutInfo, {ImageTransparency = 1}):Play()
-	TweenService:Create(IntroBackground, OutInfo, {BackgroundTransparency = 1}):Play()
-	Credits:TweenPosition(UDim2.new(0, 0, 0.9, 30), "Out", "Quart", 0.2)
-	wait(0.2)
-	Logo:Destroy()
-	Credits:Destroy()
-	IntroBackground:Destroy()
-	minimizeHolder()
-	if IsOnMobile then notify("Unstable Device", "On mobile, Infinite Yield may have issues or features that are not functioning correctly.") end
-end)
+minimizeHolder()
+refreshCommandList()
+
+function env.STOP_INFINITEYIELD()
+	env.NOTIFY = nil
+	loopgoto = nil
+	bringT = {}
+
+	pcall(execCmd, 'unfling')
+	pcall(execCmd, 'breakloops')
+
+	if IsOnMobile then
+		unmobilefly(speaker)
+	else
+		NOFLY()
+	end
+
+	if Noclipping then
+		Noclipping:Disconnect()
+	end
+	Clip = true
+
+	for _, connection in pairs(connections) do
+		if typeof(connection) == 'RBXScriptConnection' and connection.Connected then
+			connection:Disconnect()
+		end
+	end
+
+	for _, instance in pairs(instances) do
+		if typeof(instance) == 'Instance' then
+			instance:Destroy()
+		end
+	end
+
+	task.wait()
+
+	local char = LocalPlayer.Character
+	if typeof(char) == 'Instance' and char:IsA('Model') then
+		for _, part in pairs(char:GetDescendants()) do
+			if part:IsA('BasePart') then
+				part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.5)
+				part.AssemblyLinearVelocity = Vector3.zero
+				part.AssemblyAngularVelocity = Vector3.zero
+			end
+		end
+	end
+end
+
+if IsOnMobile then notify("Unstable Device", "On mobile, Infinite Yield may have issues or features that are not functioning correctly.") end
