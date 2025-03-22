@@ -9,7 +9,7 @@ end
 
 local RunService = cloneref(game:GetService('RunService'))
 local scriptMode = typeof(script) == 'Instance' and script:IsDescendantOf(game)
-local env = type(getgenv) == 'function' and getgenv() or (scriptMode and {})
+local env = (scriptMode and {}) or type(getgenv) == 'function' and getgenv()
 assert(type(env) == 'table', 'Missing global environment')
 
 if type(env.iy_notify) == 'function' then
