@@ -5892,39 +5892,39 @@ function respawn(plr)
 	if invisRunning then 
 		TurnVisible() 
 	end
-	local char = plr.Character
-	if typeof(char) == 'Instance' then
-		local humanoid = char:FindFirstChildOfClass("Humanoid")
-		if humanoid then 
-			humanoid:ChangeState(15) 
+	if lp_character then
+		if lp_humanoid then
+			lp_humanoid:ChangeState(15)
 		end
 		wait()
-		char:ClearAllChildren()
-		local newChar = Instance.new("Model")
-		newChar.Parent = workspace
-		plr.Character = newChar
-		wait()
-		if char then
-			plr.Character = char
-		end
-		if newChar then
-			newChar:Destroy()
-		end
+		lp_character:ClearAllChildren()
 	end
 end
 
 local refreshCmd = false
 
 function refresh(plr)
+	if refreshCmd then
+		return
+	end
 	refreshCmd = true
-	local Human = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid", true)
-	local pos = Human and Human.RootPart and Human.RootPart.CFrame
-	local pos1 = camera.CFrame
-	respawn(plr)
-	task.spawn(function()
-		plr.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, camera.CFrame = pos, wait() and pos1
-		refreshCmd = false
-	end)
+	local pos
+	local lookVector
+	if lp_rootpart then
+		pos = lp_rootpart.Position
+		lookVector = lp_rootpart.CFrame.LookVector
+	end
+	if lp_humanoid then
+		lp_humanoid:ChangeState(15)
+	end
+	lp_character = nil
+	repeat
+		wait()
+	until lp_character
+	if pos and lookVector then
+		lp_character:PivotTo(CFrame.new(pos, pos + Vector3.new(lookVector.X, 0, lookVector.Z)))
+	end
+	refreshCmd = false
 end
 
 Clip = true
